@@ -1,12 +1,12 @@
 #pragma once
 
+#include <SDL2/SDL.h>
 #include <engine/renderer.hpp>
 #include <game/tileset_data.hpp>
 #include <memory>
 
 namespace zuul
 {
-
     class TileMap; // Forward declaration
 
     enum class Direction
@@ -23,37 +23,33 @@ namespace zuul
         Player();
         ~Player() = default;
 
-        bool initialize(::std::shared_ptr<Renderer> renderer);
+        bool initialize(std::shared_ptr<Renderer> renderer);
         void update(float deltaTime, const TileMap &tileMap);
-        void render(::std::shared_ptr<Renderer> renderer);
-        void renderDebug(::std::shared_ptr<Renderer> renderer);
+        void render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom);
 
-        // Getters
-        float getX() const { return mX; }
-        float getY() const { return mY; }
-        float getSpeed() const { return mSpeed; }
-        float getCollisionX() const { return mX + mCollisionBoxOffsetX; }
-        float getCollisionY() const { return mY + mCollisionBoxOffsetY; }
-        float getCollisionWidth() const { return mCollisionBoxWidth; }
-        float getCollisionHeight() const { return mCollisionBoxHeight; }
-
-        // Setters
         void setPosition(float x, float y)
         {
             mX = x;
             mY = y;
         }
-        void setSpeed(float speed) { mSpeed = speed; }
+        float getX() const { return mX; }
+        float getY() const { return mY; }
+        void setDebugRendering(bool enabled) { mDebugRendering = enabled; }
 
     private:
-        ::std::shared_ptr<Texture> mTexture;
-        ::std::unique_ptr<TilesetData> mTilesetData;
+        int getBaseFrame() const;
+        bool loadCollisionData();
+
+        Direction mDirection;
+        std::shared_ptr<TilesetData> mTilesetData;
+        std::shared_ptr<Texture> mTexture;
         float mX;
         float mY;
         float mSpeed;
         int mWidth;
         int mHeight;
-        Direction mDirection;
+        int mTilesetColumns;
+        bool mDebugRendering;
 
         // Collision box
         float mCollisionBoxOffsetX;

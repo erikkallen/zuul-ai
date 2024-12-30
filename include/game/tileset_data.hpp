@@ -29,6 +29,14 @@ namespace zuul
         float height;
     };
 
+    struct TilesetInfo
+    {
+        int columns;
+        int tileWidth;
+        int tileHeight;
+        ::std::string imagePath;
+    };
+
     class TilesetData
     {
     public:
@@ -45,10 +53,14 @@ namespace zuul
         const CollisionBox *getCollisionBox(int tileId) const;
         bool isSolid(int tileId) const;
 
+        // Tileset info
+        const TilesetInfo &getTilesetInfo() const { return mTilesetInfo; }
+
     private:
         ::std::map<int, TileAnimation> mAnimations;
         ::std::map<int, CollisionBox> mCollisionBoxes;
         ::std::map<int, bool> mSolidTiles;
+        TilesetInfo mTilesetInfo;
     };
 
 } // namespace zuul

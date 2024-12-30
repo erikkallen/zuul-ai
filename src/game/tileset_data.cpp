@@ -22,6 +22,12 @@ namespace zuul
             json tilesetJson;
             file >> tilesetJson;
 
+            // Load tileset info
+            mTilesetInfo.columns = tilesetJson["columns"].get<int>();
+            mTilesetInfo.tileWidth = tilesetJson["tilewidth"].get<int>();
+            mTilesetInfo.tileHeight = tilesetJson["tileheight"].get<int>();
+            mTilesetInfo.imagePath = tilesetJson["image"].get<std::string>();
+
             // Process each tile's data
             const auto &tiles = tilesetJson["tiles"];
             for (const auto &tile : tiles)

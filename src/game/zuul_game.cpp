@@ -42,75 +42,53 @@ namespace zuul
 
     void ZuulGame::update(float deltaTime)
     {
+        // Get keyboard state
+        const Uint8 *keyState = SDL_GetKeyboardState(nullptr);
+
+        // Toggle debug rendering with F1
+        static bool lastF1State = false;
+        bool currentF1State = keyState[SDL_SCANCODE_F1];
+        if (currentF1State && !lastF1State)
+        {
+            mDebugRendering = !mDebugRendering;
+            mTileMap->setDebugRendering(mDebugRendering);
+            mPlayer->setDebugRendering(mDebugRendering);
+        }
+        lastF1State = currentF1State;
+
+        // Handle camera zoom with + and - keys
+        if (keyState[SDL_SCANCODE_EQUALS])
+        {
+            mCamera->adjustZoom(deltaTime); // Zoom in
+        }
+        if (keyState[SDL_SCANCODE_MINUS])
+        {
+            mCamera->adjustZoom(-deltaTime); // Zoom out
+        }
+
+        // Update game objects
         mPlayer->update(deltaTime, *mTileMap);
-        mTileMap->update(deltaTime); // Update animated tiles
-
-        // Toggle debug rendering with F1 key
-        const uint8_t *keyState = SDL_GetKeyboardState(nullptr);
-        static bool f1Pressed = false;
-        if (keyState[SDL_SCANCODE_F3])
-        {
-            if (!f1Pressed)
-            {
-                bool newDebugState = !mTileMap->getDebugRendering();
-                mTileMap->setDebugRendering(newDebugState);
-                ::std::cout << "Debug rendering: " << (newDebugState ? "ON" : "OFF") << ::std::endl;
-                f1Pressed = true;
-            }
-        }
-        else
-        {
-            f1Pressed = false;
-        }
-
-        // Update camera to follow player
+        mTileMap->update(deltaTime);
         mCamera->update(mPlayer->getX(), mPlayer->getY());
-
-        // Get screen coordinates for player position
-        float screenX, screenY;
-        mCamera->worldToScreen(mPlayer->getX(), mPlayer->getY(), screenX, screenY);
-
-        // Check map boundaries and adjust player position if needed
-        if (screenX < 0)
-            mPlayer->setPosition(mCamera->getOffsetX(), mPlayer->getY());
-        if (screenY < 0)
-            mPlayer->setPosition(mPlayer->getX(), mCamera->getOffsetY());
-        if (screenX > mWindowWidth - 32)
-            mPlayer->setPosition(mCamera->getOffsetX() + mWindowWidth - 32, mPlayer->getY());
-        if (screenY > mWindowHeight - 32)
-            mPlayer->setPosition(mPlayer->getX(), mCamera->getOffsetY() + mWindowHeight - 32);
     }
 
     void ZuulGame::render()
     {
-        // Apply camera offset when rendering
-        float mapOffsetX = -mCamera->getOffsetX();
-        float mapOffsetY = -mCamera->getOffsetY();
+        float zoom = mCamera->getZoom();
+        float offsetX = mCamera->getOffsetX();
+        float offsetY = mCamera->getOffsetY();
 
-        // Render tilemap with offset
-        mTileMap->render(getRenderer(), mapOffsetX, mapOffsetY);
-
-        // Get screen coordinates for player
-        float screenX, screenY;
-        mCamera->worldToScreen(mPlayer->getX(), mPlayer->getY(), screenX, screenY);
-
-        // Set player position to screen coordinates for rendering
-        float oldX = mPlayer->getX();
-        float oldY = mPlayer->getY();
-        mPlayer->setPosition(screenX, screenY);
+        // Render map layers
+        mTileMap->render(getRenderer(), offsetX, offsetY, zoom);
 
         // Render player
-        mPlayer->render(getRenderer());
+        mPlayer->render(getRenderer(), offsetX, offsetY, zoom);
 
-        // Render debug information last
-        if (mTileMap->getDebugRendering())
+        // Render debug info if enabled
+        if (mDebugRendering)
         {
-            mTileMap->renderDebugCollisions(getRenderer(), mapOffsetX, mapOffsetY);
-            mPlayer->renderDebug(getRenderer());
+            mTileMap->renderDebugCollisions(getRenderer(), offsetX, offsetY, zoom);
         }
-
-        // Restore player's world coordinates
-        mPlayer->setPosition(oldX, oldY);
     }
 
 } // namespace zuul

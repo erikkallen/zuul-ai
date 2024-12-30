@@ -11,7 +11,8 @@ using json = nlohmann::json;
 namespace zuul
 {
     TileMap::TileMap()
-        : mWidth(0), mHeight(0), mTileWidth(0), mTileHeight(0)
+        : mWidth(0), mHeight(0), mTileWidth(0), mTileHeight(0),
+          mWindowWidth(800), mWindowHeight(600) // Default window dimensions
     {
         mTilesetData = std::make_unique<TilesetData>();
     }
@@ -93,103 +94,106 @@ namespace zuul
         mTilesetData->update(deltaTime);
     }
 
-    void TileMap::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY)
+    void TileMap::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom)
     {
+        // Calculate visible tile range based on zoom and offset
+        int startTileX = static_cast<int>(offsetX / (mTileWidth * zoom));
+        int startTileY = static_cast<int>(offsetY / (mTileHeight * zoom));
+        int endTileX = static_cast<int>((offsetX + mWindowWidth / zoom) / mTileWidth) + 2;   // Add extra column
+        int endTileY = static_cast<int>((offsetY + mWindowHeight / zoom) / mTileHeight) + 2; // Add extra row
+
+        // Clamp tile range to map bounds
+        startTileX = std::max(0, startTileX);
+        startTileY = std::max(0, startTileY);
+        endTileX = std::min(mWidth, endTileX);
+        endTileY = std::min(mHeight, endTileY);
+
+        // Render each visible layer
         for (const auto &layer : mLayers)
         {
             if (layer.visible)
             {
-                renderLayer(layer, renderer, offsetX, offsetY);
-            }
-        }
-    }
-
-    void TileMap::renderLayer(const MapLayer &layer, std::shared_ptr<Renderer> renderer, float offsetX, float offsetY)
-    {
-        // Constants for Tiled's tile flags
-        const unsigned FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
-        const unsigned FLIPPED_VERTICALLY_FLAG = 0x40000000;
-        const unsigned FLIPPED_DIAGONALLY_FLAG = 0x20000000;
-        const unsigned ALL_FLAGS = FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG;
-
-        for (int y = 0; y < mHeight; ++y)
-        {
-            for (int x = 0; x < mWidth; ++x)
-            {
-                unsigned int gid = layer.tileData[y * mWidth + x];
-                if (gid > 0)
+                // Only render tiles within the visible range
+                for (int y = startTileY; y < endTileY; ++y)
                 {
-                    // Extract the actual tile ID (remove flip flags)
-                    int tileId = gid & ~ALL_FLAGS;
-                    tileId -= 1;
-
-                    // Get the current frame if tile is animated
-                    int currentTileId = mTilesetData->getCurrentTileId(tileId);
-
-                    // Calculate source coordinates based on tileset columns
-                    int srcX = (currentTileId % mTilesetColumns) * mTileWidth;
-                    int srcY = (currentTileId / mTilesetColumns) * mTileHeight;
-
-                    float destX = x * mTileWidth + offsetX;
-                    float destY = y * mTileHeight + offsetY;
-
-                    // Only render tiles that are visible on screen
-                    if (destX + mTileWidth >= 0 && destX < 800 && // 800 is window width
-                        destY + mTileHeight >= 0 && destY < 600)  // 600 is window height
+                    for (int x = startTileX; x < endTileX; ++x)
                     {
-                        renderer->renderTexture(mTileset,
-                                                srcX, srcY,
-                                                mTileWidth, mTileHeight,
-                                                static_cast<int>(destX),
-                                                static_cast<int>(destY),
-                                                mTileWidth, mTileHeight);
+                        int tileId = layer.tileData[y * mWidth + x];
+                        if (tileId > 0)
+                        {
+                            int currentTileId = mTilesetData->getCurrentTileId(tileId - 1);
+                            int srcX = (currentTileId % mTilesetColumns) * mTileWidth;
+                            int srcY = (currentTileId / mTilesetColumns) * mTileHeight;
+
+                            float destX = std::floor((x * mTileWidth - offsetX) * zoom);
+                            float destY = std::floor((y * mTileHeight - offsetY) * zoom);
+                            int destW = static_cast<int>(std::ceil(mTileWidth * zoom));
+                            int destH = static_cast<int>(std::ceil(mTileHeight * zoom));
+
+                            renderer->renderTexture(mTileset,
+                                                    srcX, srcY, mTileWidth, mTileHeight,
+                                                    static_cast<int>(destX),
+                                                    static_cast<int>(destY),
+                                                    destW, destH);
+                        }
                     }
                 }
             }
         }
     }
 
-    void TileMap::renderDebugCollisions(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY)
+    void TileMap::renderDebugCollisions(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom)
     {
-        // Constants for Tiled's tile flags
-        const unsigned FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
-        const unsigned FLIPPED_VERTICALLY_FLAG = 0x40000000;
-        const unsigned FLIPPED_DIAGONALLY_FLAG = 0x20000000;
-        const unsigned ALL_FLAGS = FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG;
+        // Calculate visible tile range based on zoom and offset
+        int startTileX = static_cast<int>(offsetX / (mTileWidth * zoom));
+        int startTileY = static_cast<int>(offsetY / (mTileHeight * zoom));
+        int endTileX = static_cast<int>((offsetX + mWindowWidth / zoom) / mTileWidth) + 1;
+        int endTileY = static_cast<int>((offsetY + mWindowHeight / zoom) / mTileHeight) + 1;
 
+        // Clamp tile range to map bounds
+        startTileX = std::max(0, startTileX);
+        startTileY = std::max(0, startTileY);
+        endTileX = std::min(mWidth, endTileX);
+        endTileY = std::min(mHeight, endTileY);
+
+        // Render debug info for each visible layer
         for (const auto &layer : mLayers)
         {
-            for (int y = 0; y < mHeight; ++y)
+            if (!layer.visible)
+                continue;
+
+            for (int y = startTileY; y < endTileY; ++y)
             {
-                for (int x = 0; x < mWidth; ++x)
+                for (int x = startTileX; x < endTileX; ++x)
                 {
-                    unsigned int gid = layer.tileData[y * mWidth + x];
-                    if (gid > 0)
+                    int globalTileId = layer.tileData[y * mWidth + x];
+                    if (globalTileId > 0)
                     {
-                        // Extract the actual tile ID (remove flip flags)
-                        int tileId = (gid & ~ALL_FLAGS) - 1; // Convert to 0-based
-                        float destX = x * mTileWidth + offsetX;
-                        float destY = y * mTileHeight + offsetY;
+                        int localTileId = globalTileId - 1;
+                        float tileWorldX = (x * mTileWidth - offsetX) * zoom;
+                        float tileWorldY = (y * mTileHeight - offsetY) * zoom;
 
                         // Draw red border for solid tiles
-                        if (mTilesetData->isSolid(tileId))
+                        if (mTilesetData->isSolid(localTileId))
                         {
                             renderer->renderRect(
-                                static_cast<int>(destX),
-                                static_cast<int>(destY),
-                                mTileWidth, mTileHeight,
+                                static_cast<int>(tileWorldX),
+                                static_cast<int>(tileWorldY),
+                                static_cast<int>(mTileWidth * zoom),
+                                static_cast<int>(mTileHeight * zoom),
                                 255, 0, 0, 255 // Red
                             );
                         }
 
                         // Draw yellow border for collision boxes
-                        if (const CollisionBox *box = mTilesetData->getCollisionBox(tileId))
+                        const auto *box = mTilesetData->getCollisionBox(localTileId);
+                        if (box != nullptr)
                         {
                             renderer->renderRect(
-                                static_cast<int>(destX + box->x),
-                                static_cast<int>(destY + box->y),
-                                static_cast<int>(box->width),
-                                static_cast<int>(box->height),
+                                static_cast<int>((x * mTileWidth + box->x - offsetX) * zoom),
+                                static_cast<int>((y * mTileHeight + box->y - offsetY) * zoom),
+                                static_cast<int>(box->width * zoom),
+                                static_cast<int>(box->height * zoom),
                                 255, 255, 0, 255 // Yellow
                             );
                         }

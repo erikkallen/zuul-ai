@@ -1,20 +1,23 @@
-#include <game/player.hpp>
-#include <game/tilemap.hpp>
 #include <SDL2/SDL.h>
 #include <cmath>
+#include <memory>
+#include <engine/renderer.hpp>
+#include <game/player.hpp>
+#include <game/tilemap.hpp>
 
 namespace zuul
 {
-
     Player::Player()
-        : mTexture(nullptr),
-          mTilesetData(::std::make_unique<TilesetData>()),
+        : mDirection(Direction::Down),
+          mTilesetData(std::make_shared<TilesetData>()),
+          mTexture(nullptr),
           mX(0), mY(0),
           mSpeed(200.0f),
           mWidth(32), mHeight(32),
-          mDirection(Direction::Down),
+          mTilesetColumns(3),
           mCollisionBoxOffsetX(0), mCollisionBoxOffsetY(0),
-          mCollisionBoxWidth(0), mCollisionBoxHeight(0)
+          mCollisionBoxWidth(0), mCollisionBoxHeight(0),
+          mDebugRendering(false)
     {
     }
 
@@ -30,6 +33,12 @@ namespace zuul
         {
             return false;
         }
+
+        // Get tileset grid information
+        const auto &tilesetInfo = mTilesetData->getTilesetInfo();
+        mTilesetColumns = tilesetInfo.columns;
+        mWidth = tilesetInfo.tileWidth;
+        mHeight = tilesetInfo.tileHeight;
 
         // Get collision box from tileset data
         if (const CollisionBox *box = mTilesetData->getCollisionBox(0))
@@ -113,28 +122,45 @@ namespace zuul
         mTilesetData->update(deltaTime);
     }
 
-    void Player::render(std::shared_ptr<Renderer> renderer)
+    void Player::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom)
     {
-        int baseTileId = static_cast<int>(mDirection);
-        int currentTileId = mTilesetData->getCurrentTileId(baseTileId);
-        int sourceX = currentTileId * mWidth;
+        // Calculate screen position with zoom
+        float screenX = std::floor((mX - offsetX) * zoom);
+        float screenY = std::floor((mY - offsetY) * zoom);
+        int destW = static_cast<int>(std::ceil(mWidth * zoom));
+        int destH = static_cast<int>(std::ceil(mHeight * zoom));
 
+        // Get current animation frame
+        int currentTileId = mTilesetData->getCurrentTileId(getBaseFrame());
+
+        // Calculate source rectangle in tileset
+        int srcX = (currentTileId % mTilesetColumns) * mWidth;
+        int srcY = (currentTileId / mTilesetColumns) * mHeight;
+
+        // Render the player sprite scaled by zoom
         renderer->renderTexture(mTexture,
-                                sourceX, 0, mWidth, mHeight,
-                                static_cast<int>(mX), static_cast<int>(mY),
-                                mWidth, mHeight);
+                                srcX, srcY, mWidth, mHeight,
+                                static_cast<int>(screenX),
+                                static_cast<int>(screenY),
+                                destW, destH);
+
+        // Render collision box in debug mode
+        if (mDebugRendering)
+        {
+            // Draw collision box in blue
+            renderer->renderRect(
+                static_cast<int>((mX + mCollisionBoxOffsetX - offsetX) * zoom),
+                static_cast<int>((mY + mCollisionBoxOffsetY - offsetY) * zoom),
+                static_cast<int>(mCollisionBoxWidth * zoom),
+                static_cast<int>(mCollisionBoxHeight * zoom),
+                0, 0, 255, 255 // Blue
+            );
+        }
     }
 
-    void Player::renderDebug(std::shared_ptr<Renderer> renderer)
+    int Player::getBaseFrame() const
     {
-        // Draw collision box in blue
-        renderer->renderRect(
-            static_cast<int>(mX + mCollisionBoxOffsetX),
-            static_cast<int>(mY + mCollisionBoxOffsetY),
-            static_cast<int>(mCollisionBoxWidth),
-            static_cast<int>(mCollisionBoxHeight),
-            0, 0, 255, 255 // Blue
-        );
+        return static_cast<int>(mDirection);
     }
 
 } // namespace zuul
