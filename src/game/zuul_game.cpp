@@ -48,7 +48,7 @@ namespace zuul
         // Toggle debug rendering with F1 key
         const uint8_t *keyState = SDL_GetKeyboardState(nullptr);
         static bool f1Pressed = false;
-        if (keyState[SDL_SCANCODE_F1])
+        if (keyState[SDL_SCANCODE_F3])
         {
             if (!f1Pressed)
             {

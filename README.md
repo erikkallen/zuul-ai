@@ -41,11 +41,9 @@ cp assets/*.{tmj,png,ttf,tsj} build/
 ./zuul
 ```
 
-## Testing
+## Debug mode
 
-```bash
-meson test
-```
+Press F3 to toggle debug mode.
 
 ## Map making
 
