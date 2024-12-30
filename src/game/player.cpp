@@ -87,18 +87,25 @@ namespace zuul
             dy *= normalizer;
         }
 
-        // Calculate new position
+        // Try X movement first
         float newX = mX + dx * mSpeed * deltaTime;
-        float newY = mY + dy * mSpeed * deltaTime;
-
-        // Check collision at new position
         if (!tileMap.checkCollision(
                 newX + mCollisionBoxOffsetX,
-                newY + mCollisionBoxOffsetY,
+                mY + mCollisionBoxOffsetY,
                 mCollisionBoxWidth,
                 mCollisionBoxHeight))
         {
             mX = newX;
+        }
+
+        // Then try Y movement
+        float newY = mY + dy * mSpeed * deltaTime;
+        if (!tileMap.checkCollision(
+                mX + mCollisionBoxOffsetX,
+                newY + mCollisionBoxOffsetY,
+                mCollisionBoxWidth,
+                mCollisionBoxHeight))
+        {
             mY = newY;
         }
 

@@ -210,8 +210,8 @@ namespace zuul
         // Convert world coordinates to tile coordinates
         int startTileX = static_cast<int>(x / mTileWidth);
         int startTileY = static_cast<int>(y / mTileHeight);
-        int endTileX = static_cast<int>((x + width) / mTileWidth);
-        int endTileY = static_cast<int>((y + height) / mTileHeight);
+        int endTileX = static_cast<int>((x + width - 1) / mTileWidth); // -1 to make it inclusive
+        int endTileY = static_cast<int>((y + height - 1) / mTileHeight);
 
         // Check each potentially colliding tile
         for (int tileY = startTileY; tileY <= endTileY; ++tileY)
@@ -231,17 +231,29 @@ namespace zuul
                             // Check if tile is solid
                             if (mTilesetData->isSolid(tileId))
                             {
-                                return true;
+                                // Do a precise AABB collision check
+                                float tileLeft = tileX * mTileWidth;
+                                float tileRight = tileLeft + mTileWidth - 1; // -1 for inclusive bounds
+                                float tileTop = tileY * mTileHeight;
+                                float tileBottom = tileTop + mTileHeight - 1;
+
+                                if (x <= tileRight && x + width - 1 >= tileLeft &&
+                                    y <= tileBottom && y + height - 1 >= tileTop)
+                                {
+                                    return true;
+                                }
                             }
 
                             // Check collision box if present
                             if (const CollisionBox *box = mTilesetData->getCollisionBox(tileId))
                             {
-                                float boxX = tileX * mTileWidth + box->x;
-                                float boxY = tileY * mTileHeight + box->y;
+                                float boxLeft = tileX * mTileWidth + box->x;
+                                float boxRight = boxLeft + box->width - 1; // -1 for inclusive bounds
+                                float boxTop = tileY * mTileHeight + box->y;
+                                float boxBottom = boxTop + box->height - 1;
 
-                                if (x < boxX + box->width && x + width > boxX &&
-                                    y < boxY + box->height && y + height > boxY)
+                                if (x <= boxRight && x + width - 1 >= boxLeft &&
+                                    y <= boxBottom && y + height - 1 >= boxTop)
                                 {
                                     return true;
                                 }

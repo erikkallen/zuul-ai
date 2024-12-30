@@ -13,8 +13,6 @@ namespace zuul
     {
     public:
         bool initialize(int windowWidth, int windowHeight, const ::std::string &windowTitle) override;
-
-    protected:
         void update(float deltaTime) override;
         void render() override;
 

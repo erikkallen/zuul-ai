@@ -1,12 +1,11 @@
 #include <game/zuul_game.hpp>
-#include <memory>
 #include <SDL2/SDL.h>
 #include <iostream>
 
 namespace zuul
 {
 
-    bool ZuulGame::initialize(int windowWidth, int windowHeight, const std::string &windowTitle)
+    bool ZuulGame::initialize(int windowWidth, int windowHeight, const ::std::string &windowTitle)
     {
         mWindowWidth = windowWidth;
         mWindowHeight = windowHeight;
@@ -16,26 +15,23 @@ namespace zuul
             return false;
         }
 
-        mTileMap = std::make_unique<TileMap>();
+        mTileMap = ::std::make_unique<TileMap>();
         if (!mTileMap->loadFromFile("assets/home.tmj", "assets/map_tiles.tsj", getRenderer()))
         {
             return false;
         }
 
-        mPlayer = std::make_unique<Player>();
+        mPlayer = ::std::make_unique<Player>();
         if (!mPlayer->initialize(getRenderer()))
         {
             return false;
         }
 
         // Set initial player position to center of screen
-        mPlayer->setPosition(
-            100, // 32 is player width
-            100  // 32 is player height
-        );
+        mPlayer->setPosition(100, 100);
 
         // Initialize camera
-        mCamera = std::make_unique<Camera>(
+        mCamera = ::std::make_unique<Camera>(
             windowWidth,
             windowHeight,
             mTileMap->getWidth() * mTileMap->getTileWidth(),
@@ -58,7 +54,7 @@ namespace zuul
             {
                 bool newDebugState = !mTileMap->getDebugRendering();
                 mTileMap->setDebugRendering(newDebugState);
-                std::cout << "Debug rendering: " << (newDebugState ? "ON" : "OFF") << std::endl;
+                ::std::cout << "Debug rendering: " << (newDebugState ? "ON" : "OFF") << ::std::endl;
                 f1Pressed = true;
             }
         }
