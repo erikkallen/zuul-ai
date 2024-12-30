@@ -6,7 +6,7 @@
 namespace zuul
 {
 
-    bool ZuulGame::initialize(int windowWidth, int windowHeight, const ::std::string &windowTitle)
+    bool ZuulGame::initialize(int windowWidth, int windowHeight, const std::string &windowTitle)
     {
         mWindowWidth = windowWidth;
         mWindowHeight = windowHeight;
@@ -16,13 +16,13 @@ namespace zuul
             return false;
         }
 
-        mTileMap = ::std::make_unique<TileMap>();
+        mTileMap = std::make_unique<TileMap>();
         if (!mTileMap->loadFromFile("assets/home.tmj", "assets/map_tiles.tsj", getRenderer()))
         {
             return false;
         }
 
-        mPlayer = ::std::make_unique<Player>();
+        mPlayer = std::make_unique<Player>();
         if (!mPlayer->initialize(getRenderer()))
         {
             return false;
@@ -30,12 +30,12 @@ namespace zuul
 
         // Set initial player position to center of screen
         mPlayer->setPosition(
-            (windowWidth - 32) / 2.0f, // 32 is player width
-            (windowHeight - 32) / 2.0f // 32 is player height
+            100, // 32 is player width
+            100  // 32 is player height
         );
 
-        // Initialize camera with map dimensions from tilemap
-        mCamera = ::std::make_unique<Camera>(
+        // Initialize camera
+        mCamera = std::make_unique<Camera>(
             windowWidth,
             windowHeight,
             mTileMap->getWidth() * mTileMap->getTileWidth(),
@@ -106,14 +106,15 @@ namespace zuul
         // Render player
         mPlayer->render(getRenderer());
 
-        // Restore player's world coordinates
-        mPlayer->setPosition(oldX, oldY);
-
         // Render debug information last
         if (mTileMap->getDebugRendering())
         {
             mTileMap->renderDebugCollisions(getRenderer(), mapOffsetX, mapOffsetY);
+            mPlayer->renderDebug(getRenderer());
         }
+
+        // Restore player's world coordinates
+        mPlayer->setPosition(oldX, oldY);
     }
 
 } // namespace zuul

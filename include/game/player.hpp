@@ -1,32 +1,20 @@
 #pragma once
 
 #include <engine/renderer.hpp>
-#include <game/tilemap.hpp>
+#include <game/tileset_data.hpp>
 #include <memory>
-#include <string>
-#include <vector>
 
 namespace zuul
 {
 
+    class TileMap; // Forward declaration
+
     enum class Direction
     {
-        Down = 0,  // Tiles 0-2
-        Left = 1,  // Tiles 3-5
-        Right = 2, // Tiles 6-8
-        Up = 3     // Tiles 9-11
-    };
-
-    struct AnimationFrame
-    {
-        int tileId;
-        float duration;
-    };
-
-    struct AnimationData
-    {
-        std::vector<AnimationFrame> frames;
-        int currentFrameIndex;
+        Down = 0,
+        Up = 3,
+        Left = 6,
+        Right = 9
     };
 
     class Player
@@ -38,12 +26,16 @@ namespace zuul
         bool initialize(::std::shared_ptr<Renderer> renderer);
         void update(float deltaTime, const TileMap &tileMap);
         void render(::std::shared_ptr<Renderer> renderer);
+        void renderDebug(::std::shared_ptr<Renderer> renderer);
 
         // Getters
         float getX() const { return mX; }
         float getY() const { return mY; }
         float getSpeed() const { return mSpeed; }
-        Direction getDirection() const { return mDirection; }
+        float getCollisionX() const { return mX + mCollisionBoxOffsetX; }
+        float getCollisionY() const { return mY + mCollisionBoxOffsetY; }
+        float getCollisionWidth() const { return mCollisionBoxWidth; }
+        float getCollisionHeight() const { return mCollisionBoxHeight; }
 
         // Setters
         void setPosition(float x, float y)
@@ -54,20 +46,20 @@ namespace zuul
         void setSpeed(float speed) { mSpeed = speed; }
 
     private:
-        bool loadTilesetData();
-        void updateAnimation(float deltaTime, bool isMoving);
-        int getCurrentTileId() const;
-        bool tryMove(float newX, float newY, const TileMap &tileMap);
-
         ::std::shared_ptr<Texture> mTexture;
+        ::std::unique_ptr<TilesetData> mTilesetData;
         float mX;
         float mY;
         float mSpeed;
         int mWidth;
         int mHeight;
-        float mAnimationTimer;
         Direction mDirection;
-        ::std::vector<AnimationData> mDirectionAnimations;
+
+        // Collision box
+        float mCollisionBoxOffsetX;
+        float mCollisionBoxOffsetY;
+        float mCollisionBoxWidth;
+        float mCollisionBoxHeight;
     };
 
 } // namespace zuul
