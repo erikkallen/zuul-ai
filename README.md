@@ -1,7 +1,7 @@
 # Zuul remastered
 
 Simple tiling game originally built in java by me and a classmate.
-Now I am trying to recreate it as best I can in C using SDL just for fun.
+Now I am trying to recreate it as best I can in C++ using SDL just for fun using every AI tool possible!
 
 ![Screenshot of zuul](/assets/screenshot.png)
 
@@ -13,17 +13,19 @@ Now I am trying to recreate it as best I can in C using SDL just for fun.
 - SDL2 image
 - SDL2 ttf
 - Meson
-- cJSON
+- nlohmann-json
+- spdlog
 
-Ubuntu
-```apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev meson git libcjson```
+Ubuntu```apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev meson git```
 
 Arch
-```yay -S sdl2 sdl2_image sdl2_ttf meson cjson``` 
+```yay -S sdl2 sdl2_image sdl2_ttf meson``` 
 
 ```bash
-git clone --recurse-submodules https://github.com/erikkallen/zuul-remastered.git
+git clone https://github.com/erikkallen/zuul-remastered.git
 cd zuul
+meson wrap add nlohmann-json
+meson wrap add spdlog
 mkdir build
 cd build
 meson setup ..
@@ -34,9 +36,7 @@ ninja
 
 ```bash
 # Copy the assets.json to the directory you built the projects e.g. <project_root>/build
-cp assets/assets.json build/
-# Update paths in the assets file if needed
-sed -i 's|"path": "../assets"|"path": "./new_assets_path"|g' build/assets.json
+cp assets/*.{tmj,png,ttf,tsj} build/
 # Make sure you are in the directory where you built the project
 ./zuul
 ```
@@ -53,9 +53,7 @@ For mapmaking I used Tiled. Currently the following features are supported in th
 
 - Multiple layers
 - Animations using the tiled animation editor
-- Multiple size tiles should work (tested 32, 16 and 128px)
-- Primitive map loading using objects with a string property called "warp" and the value is the name of the map and coordinates on the destination map: map.tmj:x,y
-- 
+
 
 ## Thanks to the following projects for their awesome tools/libraries/inspiration
 
@@ -63,6 +61,3 @@ For mapmaking I used Tiled. Currently the following features are supported in th
 - [Pixelorama](https://github.com/Orama-Interactive/Pixelorama)
 - [SDL](https://www.libsdl.org/)
 - [Kenny](https://www.kenney.nl/assets/roguelike-rpg-pack)
-- [cJSON](https://github.com/DaveGamble/cJSON)
-- [log.c](https://github.com/rxi/log.c)
-- 
