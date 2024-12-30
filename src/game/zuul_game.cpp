@@ -1,5 +1,7 @@
 #include <game/zuul_game.hpp>
 #include <memory>
+#include <SDL2/SDL.h>
+#include <iostream>
 
 namespace zuul
 {
@@ -44,8 +46,26 @@ namespace zuul
 
     void ZuulGame::update(float deltaTime)
     {
-        mPlayer->update(deltaTime);
+        mPlayer->update(deltaTime, *mTileMap);
         mTileMap->update(deltaTime); // Update animated tiles
+
+        // Toggle debug rendering with F1 key
+        const uint8_t *keyState = SDL_GetKeyboardState(nullptr);
+        static bool f1Pressed = false;
+        if (keyState[SDL_SCANCODE_F1])
+        {
+            if (!f1Pressed)
+            {
+                bool newDebugState = !mTileMap->getDebugRendering();
+                mTileMap->setDebugRendering(newDebugState);
+                std::cout << "Debug rendering: " << (newDebugState ? "ON" : "OFF") << std::endl;
+                f1Pressed = true;
+            }
+        }
+        else
+        {
+            f1Pressed = false;
+        }
 
         // Update camera to follow player
         mCamera->update(mPlayer->getX(), mPlayer->getY());
@@ -88,6 +108,12 @@ namespace zuul
 
         // Restore player's world coordinates
         mPlayer->setPosition(oldX, oldY);
+
+        // Render debug information last
+        if (mTileMap->getDebugRendering())
+        {
+            mTileMap->renderDebugCollisions(getRenderer(), mapOffsetX, mapOffsetY);
+        }
     }
 
 } // namespace zuul

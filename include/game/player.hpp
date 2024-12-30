@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engine/renderer.hpp>
+#include <game/tilemap.hpp>
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,7 +36,7 @@ namespace zuul
         ~Player() = default;
 
         bool initialize(::std::shared_ptr<Renderer> renderer);
-        void update(float deltaTime);
+        void update(float deltaTime, const TileMap &tileMap);
         void render(::std::shared_ptr<Renderer> renderer);
 
         // Getters
@@ -56,6 +57,7 @@ namespace zuul
         bool loadTilesetData();
         void updateAnimation(float deltaTime, bool isMoving);
         int getCurrentTileId() const;
+        bool tryMove(float newX, float newY, const TileMap &tileMap);
 
         ::std::shared_ptr<Texture> mTexture;
         float mX;

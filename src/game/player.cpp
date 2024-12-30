@@ -59,28 +59,23 @@ namespace zuul
                 int id = tile["id"].get<int>();
                 if (tile.contains("animation"))
                 {
-                    Direction dir;
                     int dirIndex = -1;
 
                     // Determine which direction this animation belongs to
                     if (id == 0)
                     {
-                        dir = Direction::Down;
                         dirIndex = static_cast<int>(Direction::Down);
                     }
                     else if (id == 3)
                     {
-                        dir = Direction::Up;
                         dirIndex = static_cast<int>(Direction::Up);
                     }
                     else if (id == 6)
                     {
-                        dir = Direction::Left;
                         dirIndex = static_cast<int>(Direction::Left);
                     }
                     else if (id == 9)
                     {
-                        dir = Direction::Right;
                         dirIndex = static_cast<int>(Direction::Right);
                     }
                     else
@@ -110,7 +105,19 @@ namespace zuul
         }
     }
 
-    void Player::update(float deltaTime)
+    bool Player::tryMove(float newX, float newY, const TileMap &tileMap)
+    {
+        // Check if the new position would cause a collision
+        if (!tileMap.checkCollision(newX, newY, mWidth, mHeight))
+        {
+            mX = newX;
+            mY = newY;
+            return true;
+        }
+        return false;
+    }
+
+    void Player::update(float deltaTime, const TileMap &tileMap)
     {
         const uint8_t *keyState = SDL_GetKeyboardState(nullptr);
 
@@ -146,12 +153,26 @@ namespace zuul
             dy *= normalizer;
         }
 
-        // Update position
-        mX += dx * mSpeed * deltaTime;
-        mY += dy * mSpeed * deltaTime;
+        // Calculate new position
+        float newX = mX + dx * mSpeed * deltaTime;
+        float newY = mY + dy * mSpeed * deltaTime;
+
+        // Try to move to new position, checking for collisions
+        bool moved = false;
+        if (dx != 0 && dy != 0)
+        {
+            // For diagonal movement, try to slide along walls
+            moved = tryMove(newX, newY, tileMap) ||
+                    tryMove(mX + dx * mSpeed * deltaTime, mY, tileMap) ||
+                    tryMove(mX, mY + dy * mSpeed * deltaTime, tileMap);
+        }
+        else
+        {
+            moved = tryMove(newX, newY, tileMap);
+        }
 
         // Update animation
-        updateAnimation(deltaTime, dx != 0 || dy != 0);
+        updateAnimation(deltaTime, moved);
     }
 
     void Player::updateAnimation(float deltaTime, bool isMoving)

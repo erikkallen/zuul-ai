@@ -27,5 +27,8 @@ namespace zuul
         virtual ::std::shared_ptr<Texture> loadTexture(const ::std::string &path) = 0;
         virtual void renderTexture(const ::std::shared_ptr<Texture> &texture, int srcX, int srcY, int srcW, int srcH,
                                    int destX, int destY, int destW, int destH) = 0;
+
+        // Debug rendering methods
+        virtual void renderRect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;
     };
 } // namespace zuul

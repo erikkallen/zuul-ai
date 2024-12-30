@@ -131,4 +131,12 @@ namespace zuul
         SDL_Rect destRect = {destX, destY, destW, destH};
         SDL_RenderCopy(mRenderer, sdlTexture->getSDLTexture(), &srcRect, &destRect);
     }
+
+    void SDLRenderer::renderRect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+    {
+        SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(mRenderer, r, g, b, a);
+        SDL_Rect rect = {x, y, w, h};
+        SDL_RenderDrawRect(mRenderer, &rect);
+    }
 }
