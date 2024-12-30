@@ -24,6 +24,7 @@ sources = files(
     'src/game/tilemap.cpp',
     'src/game/zuul_game.cpp',
     'src/game/player.cpp',
+    'src/game/camera.cpp',
 )
 
 executable(

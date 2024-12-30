@@ -3,6 +3,7 @@
 #include <engine/game.hpp>
 #include <game/tilemap.hpp>
 #include <game/player.hpp>
+#include <game/camera.hpp>
 #include <memory>
 
 namespace zuul
@@ -20,6 +21,9 @@ namespace zuul
     private:
         ::std::unique_ptr<TileMap> mTileMap;
         ::std::unique_ptr<Player> mPlayer;
+        ::std::unique_ptr<Camera> mCamera;
+        int mWindowWidth;
+        int mWindowHeight;
     };
 
 } // namespace zuul

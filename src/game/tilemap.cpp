@@ -9,6 +9,10 @@ using json = nlohmann::json;
 
 namespace zuul
 {
+    TileMap::TileMap()
+        : mWidth(0), mHeight(0), mTileWidth(0), mTileHeight(0), mTilesetColumns(0)
+    {
+    }
 
     bool TileMap::loadFromFile(const std::string &mapPath, const std::string &tilesetPath, std::shared_ptr<Renderer> renderer)
     {
@@ -25,17 +29,39 @@ namespace zuul
             json tilesetJson;
             tilesetFile >> tilesetJson;
 
-            mTileset.tileWidth = tilesetJson["tilewidth"];
-            mTileset.tileHeight = tilesetJson["tileheight"];
-            mTileset.columns = tilesetJson["columns"];
-            mTileset.tileCount = tilesetJson["tilecount"];
+            mTileWidth = tilesetJson["tilewidth"];
+            mTileHeight = tilesetJson["tileheight"];
+            mTilesetColumns = tilesetJson["columns"];
 
             std::string imagePath = "assets/" + std::string(tilesetJson["image"]);
-            mTileset.texture = renderer->loadTexture(imagePath);
-            if (!mTileset.texture)
+            mTileset = renderer->loadTexture(imagePath);
+            if (!mTileset)
             {
                 std::cerr << "Failed to load tileset texture: " << imagePath << std::endl;
                 return false;
+            }
+
+            // Load animated tiles from tileset
+            if (tilesetJson.contains("tiles"))
+            {
+                for (const auto &tile : tilesetJson["tiles"])
+                {
+                    if (tile.contains("animation"))
+                    {
+                        int tileId = tile["id"].get<int>();
+                        TileAnimation animation;
+                        animation.currentFrame = 0;
+                        animation.timer = 0;
+
+                        for (const auto &frame : tile["animation"])
+                        {
+                            animation.tileIds.push_back(frame["tileid"].get<int>());
+                            animation.durations.push_back(frame["duration"].get<float>() / 1000.0f);
+                        }
+
+                        mAnimatedTiles[tileId] = animation;
+                    }
+                }
             }
 
             // Load map
@@ -72,22 +98,59 @@ namespace zuul
         }
     }
 
-    void TileMap::render(std::shared_ptr<Renderer> renderer)
+    void TileMap::update(float deltaTime)
+    {
+        // Update all animated tiles
+        for (auto &[tileId, animation] : mAnimatedTiles)
+        {
+            animation.timer += deltaTime;
+            float currentDuration = animation.durations[animation.currentFrame];
+
+            if (animation.timer >= currentDuration)
+            {
+                animation.timer -= currentDuration;
+                animation.currentFrame = (animation.currentFrame + 1) % animation.tileIds.size();
+            }
+        }
+    }
+
+    int TileMap::getCurrentTileId(int tileId) const
+    {
+        // Check if this tile has an animation
+        auto it = mAnimatedTiles.find(tileId - 1); // Subtract 1 because Tiled uses 1-based indices
+        if (it != mAnimatedTiles.end())
+        {
+            // Return the current frame's tile ID
+            return it->second.tileIds[it->second.currentFrame];
+        }
+        return tileId - 1; // Return the original tile ID (converted to 0-based)
+    }
+
+    void TileMap::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY)
     {
         for (int y = 0; y < mHeight; ++y)
         {
             for (int x = 0; x < mWidth; ++x)
             {
-                int tileIndex = mTileData[y * mWidth + x] - 1; // Tiled uses 1-based indices
-                if (tileIndex >= 0)
+                int tileId = mTileData[y * mWidth + x];
+                if (tileId > 0) // Tiled uses 0 for empty tiles
                 {
-                    int srcX = (tileIndex % mTileset.columns) * mTileset.tileWidth;
-                    int srcY = (tileIndex / mTileset.columns) * mTileset.tileHeight;
+                    int currentTileId = getCurrentTileId(tileId);
+                    int srcX = (currentTileId % mTilesetColumns) * mTileWidth;
+                    int srcY = (currentTileId / mTilesetColumns) * mTileHeight;
 
-                    renderer->renderTexture(mTileset.texture,
-                                            srcX, srcY, mTileset.tileWidth, mTileset.tileHeight,
-                                            x * mTileset.tileWidth, y * mTileset.tileHeight,
-                                            mTileset.tileWidth, mTileset.tileHeight);
+                    float destX = x * mTileWidth + offsetX;
+                    float destY = y * mTileHeight + offsetY;
+
+                    // Only render tiles that are visible on screen
+                    if (destX + mTileWidth >= 0 && destX < 800 && // 800 is window width
+                        destY + mTileHeight >= 0 && destY < 600)  // 600 is window height
+                    {
+                        renderer->renderTexture(mTileset,
+                                                srcX, srcY, mTileWidth, mTileHeight,
+                                                static_cast<int>(destX), static_cast<int>(destY),
+                                                mTileWidth, mTileHeight);
+                    }
                 }
             }
         }
