@@ -23,6 +23,7 @@ sources = files(
     'src/engine/sdl_renderer.cpp',
     'src/game/tilemap.cpp',
     'src/game/zuul_game.cpp',
+    'src/game/player.cpp',
 )
 
 executable(

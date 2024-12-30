@@ -13,7 +13,7 @@ namespace zuul
         Game();
         virtual ~Game() = default;
 
-        bool initialize(int windowWidth, int windowHeight, const ::std::string &windowTitle);
+        virtual bool initialize(int windowWidth, int windowHeight, const ::std::string &windowTitle);
         void run();
         void stop();
 
