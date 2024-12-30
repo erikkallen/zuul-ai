@@ -78,7 +78,7 @@ namespace zuul
             mWidth = mapJson["width"];
             mHeight = mapJson["height"];
 
-            // Get the first layer's data (assuming it's the background layer)
+            // Load all layers
             const auto &layers = mapJson["layers"];
             if (layers.empty())
             {
@@ -86,8 +86,17 @@ namespace zuul
                 return false;
             }
 
-            const auto &firstLayer = layers[0];
-            mTileData = firstLayer["data"].get<std::vector<int>>();
+            for (const auto &layerJson : layers)
+            {
+                if (layerJson["type"] == "tilelayer") // Only process tile layers
+                {
+                    MapLayer layer;
+                    layer.name = layerJson["name"];
+                    layer.visible = layerJson.value("visible", true); // Default to visible if not specified
+                    layer.tileData = layerJson["data"].get<std::vector<int>>();
+                    mLayers.push_back(layer);
+                }
+            }
 
             return true;
         }
@@ -126,13 +135,16 @@ namespace zuul
         return tileId - 1; // Return the original tile ID (converted to 0-based)
     }
 
-    void TileMap::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY)
+    void TileMap::renderLayer(const MapLayer &layer, std::shared_ptr<Renderer> renderer, float offsetX, float offsetY)
     {
+        if (!layer.visible)
+            return;
+
         for (int y = 0; y < mHeight; ++y)
         {
             for (int x = 0; x < mWidth; ++x)
             {
-                int tileId = mTileData[y * mWidth + x];
+                int tileId = layer.tileData[y * mWidth + x];
                 if (tileId > 0) // Tiled uses 0 for empty tiles
                 {
                     int currentTileId = getCurrentTileId(tileId);
@@ -153,6 +165,15 @@ namespace zuul
                     }
                 }
             }
+        }
+    }
+
+    void TileMap::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY)
+    {
+        // Render all layers in order
+        for (const auto &layer : mLayers)
+        {
+            renderLayer(layer, renderer, offsetX, offsetY);
         }
     }
 

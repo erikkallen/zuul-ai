@@ -16,6 +16,13 @@ namespace zuul
         float timer;
     };
 
+    struct MapLayer
+    {
+        std::string name;
+        std::vector<int> tileData;
+        bool visible;
+    };
+
     class TileMap
     {
     public:
@@ -32,9 +39,10 @@ namespace zuul
 
     private:
         int getCurrentTileId(int tileId) const;
+        void renderLayer(const MapLayer &layer, ::std::shared_ptr<Renderer> renderer, float offsetX, float offsetY);
 
         ::std::shared_ptr<Texture> mTileset;
-        ::std::vector<int> mTileData;
+        ::std::vector<MapLayer> mLayers;
         ::std::unordered_map<int, TileAnimation> mAnimatedTiles;
         int mWidth;
         int mHeight;
