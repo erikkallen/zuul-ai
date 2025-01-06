@@ -11,13 +11,18 @@ namespace zuul
         : mDirection(Direction::Down),
           mTilesetData(std::make_shared<TilesetData>()),
           mTexture(nullptr),
-          mX(0), mY(0),
+          mX(0),
+          mY(0),
           mSpeed(200.0f),
-          mWidth(32), mHeight(32),
+          mWidth(32),
+          mHeight(32),
           mTilesetColumns(3),
-          mCollisionBoxOffsetX(0), mCollisionBoxOffsetY(0),
-          mCollisionBoxWidth(0), mCollisionBoxHeight(0),
-          mDebugRendering(false)
+          mDebugRendering(false),
+          mIsMoving(false),
+          mCollisionBoxOffsetX(0),
+          mCollisionBoxOffsetY(0),
+          mCollisionBoxWidth(0),
+          mCollisionBoxHeight(0)
     {
     }
 
@@ -88,6 +93,9 @@ namespace zuul
             mDirection = Direction::Right;
         }
 
+        // Check if player is moving
+        mIsMoving = (dx != 0 || dy != 0);
+
         // Normalize diagonal movement
         if (dx != 0 && dy != 0)
         {
@@ -95,6 +103,9 @@ namespace zuul
             dx *= normalizer;
             dy *= normalizer;
         }
+
+        // Update collision box before movement checks
+        updateCollisionBox();
 
         // Try X movement first
         float newX = mX + dx * mSpeed * deltaTime;
@@ -118,8 +129,25 @@ namespace zuul
             mY = newY;
         }
 
-        // Update animations
-        mTilesetData->update(deltaTime);
+        // Only update animations if moving
+        if (mIsMoving)
+        {
+            mTilesetData->update(deltaTime);
+        }
+    }
+
+    void Player::updateCollisionBox()
+    {
+        int baseFrame = getBaseFrame();
+        int currentTileId = mIsMoving ? mTilesetData->getCurrentTileId(baseFrame) : baseFrame;
+
+        if (const CollisionBox *box = mTilesetData->getCollisionBox(currentTileId))
+        {
+            mCollisionBoxOffsetX = box->x;
+            mCollisionBoxOffsetY = box->y;
+            mCollisionBoxWidth = box->width;
+            mCollisionBoxHeight = box->height;
+        }
     }
 
     void Player::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom)
@@ -130,8 +158,16 @@ namespace zuul
         int destW = static_cast<int>(std::ceil(mWidth * zoom));
         int destH = static_cast<int>(std::ceil(mHeight * zoom));
 
-        // Get current animation frame
-        int currentTileId = mTilesetData->getCurrentTileId(getBaseFrame());
+        // Get current animation frame or base frame if not moving
+        int currentTileId;
+        if (mIsMoving)
+        {
+            currentTileId = mTilesetData->getCurrentTileId(getBaseFrame());
+        }
+        else
+        {
+            currentTileId = getBaseFrame(); // Use base frame when standing still
+        }
 
         // Calculate source rectangle in tileset
         int srcX = (currentTileId % mTilesetColumns) * mWidth;

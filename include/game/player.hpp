@@ -39,6 +39,7 @@ namespace zuul
     private:
         int getBaseFrame() const;
         bool loadCollisionData();
+        void updateCollisionBox();
 
         Direction mDirection;
         std::shared_ptr<TilesetData> mTilesetData;
@@ -50,6 +51,7 @@ namespace zuul
         int mHeight;
         int mTilesetColumns;
         bool mDebugRendering;
+        bool mIsMoving;
 
         // Collision box
         float mCollisionBoxOffsetX;
