@@ -59,4 +59,16 @@ namespace zuul
                 y < mY + mHeight && y + height > mY);
     }
 
+    void Item::collect()
+    {
+        if (!mCollected)
+        {
+            mCollected = true;
+            if (mCollectCallback)
+            {
+                mCollectCallback(mTileId);
+            }
+        }
+    }
+
 } // namespace zuul

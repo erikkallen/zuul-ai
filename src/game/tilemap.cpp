@@ -69,6 +69,13 @@ namespace zuul
                 return false;
             }
 
+            // Initialize UI
+            if (!mUI.initialize(renderer))
+            {
+                std::cerr << "Failed to initialize UI" << std::endl;
+                return false;
+            }
+
             // Clear existing layers and items
             mLayers.clear();
             mItems.clear();
@@ -109,6 +116,9 @@ namespace zuul
                             int localTileId = gid - firstGid;
 
                             mItems.emplace_back(localTileId, x, y, mTilesetData, mTileset);
+                            // Set callback for item collection
+                            mItems.back().setCollectCallback([this](int itemId)
+                                                             { mUI.addCollectedItem(itemId); });
                         }
                     }
                 }
@@ -354,6 +364,11 @@ namespace zuul
     std::pair<int, int> TileMap::worldToTile(float x, float y) const
     {
         return {static_cast<int>(x / mTileWidth), static_cast<int>(y / mTileHeight)};
+    }
+
+    void TileMap::renderUI(std::shared_ptr<Renderer> renderer)
+    {
+        mUI.render(renderer);
     }
 
 } // namespace zuul

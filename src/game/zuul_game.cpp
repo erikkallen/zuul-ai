@@ -86,6 +86,9 @@ namespace zuul
         {
             mTileMap->renderDebugCollisions(getRenderer(), offsetX, offsetY, zoom);
         }
+
+        // Render UI (always on top)
+        mTileMap->renderUI(getRenderer());
     }
 
 } // namespace zuul

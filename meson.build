@@ -21,12 +21,14 @@ sources = files(
     'src/main.cpp',
     'src/engine/game.cpp',
     'src/engine/sdl_renderer.cpp',
+    'src/engine/renderer.cpp',
     'src/game/tilemap.cpp',
     'src/game/tileset_data.cpp',
     'src/game/zuul_game.cpp',
     'src/game/player.cpp',
     'src/game/camera.cpp',
     'src/game/item.cpp',
+    'src/game/ui.cpp',
 )
 
 executable(

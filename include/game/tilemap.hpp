@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <game/item.hpp>
+#include <game/ui.hpp>
 
 namespace zuul
 {
@@ -46,6 +47,9 @@ namespace zuul
         void checkItemCollisions(float x, float y, float width, float height) const;
         void renderItems(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom);
 
+        // UI
+        void renderUI(std::shared_ptr<Renderer> renderer);
+
     private:
         std::pair<int, int> worldToTile(float x, float y) const;
 
@@ -63,6 +67,7 @@ namespace zuul
         bool mDebugRendering;
 
         mutable std::vector<Item> mItems;
+        UI mUI;
     };
 
 } // namespace zuul

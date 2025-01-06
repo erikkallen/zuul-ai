@@ -31,7 +31,11 @@ namespace zuul
         return mHeight;
     }
 
-    SDLRenderer::SDLRenderer() : mWindow(nullptr), mRenderer(nullptr) {}
+    SDLRenderer::SDLRenderer()
+        : Renderer(),
+          mWindow(nullptr)
+    {
+    }
 
     SDLRenderer::~SDLRenderer()
     {
@@ -40,18 +44,29 @@ namespace zuul
 
     bool SDLRenderer::initialize(int windowWidth, int windowHeight, const std::string &windowTitle)
     {
+        // Initialize SDL
         if (SDL_Init(SDL_INIT_VIDEO) < 0)
         {
             std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
             return false;
         }
 
-        if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
+        // Initialize SDL_image
+        int imgFlags = IMG_INIT_PNG;
+        if (!(IMG_Init(imgFlags) & imgFlags))
         {
             std::cerr << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError() << std::endl;
             return false;
         }
 
+        // Initialize SDL_ttf
+        if (TTF_Init() == -1)
+        {
+            std::cerr << "SDL_ttf could not initialize! SDL_ttf Error: " << TTF_GetError() << std::endl;
+            return false;
+        }
+
+        // Create window
         mWindow = SDL_CreateWindow(windowTitle.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                    windowWidth, windowHeight, SDL_WINDOW_SHOWN);
         if (!mWindow)
@@ -60,6 +75,7 @@ namespace zuul
             return false;
         }
 
+        // Create renderer
         mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
         if (!mRenderer)
         {
@@ -67,12 +83,45 @@ namespace zuul
             return false;
         }
 
-        SDL_SetRenderDrawColor(mRenderer, 0x00, 0x00, 0x00, 0xFF);
+        // Load font
+        mFont = TTF_OpenFont("assets/fonts/OpenSans-Regular.ttf", 16);
+        if (!mFont)
+        {
+            std::cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
+            return false;
+        }
+
         return true;
+    }
+
+    void SDLRenderer::cleanup()
+    {
+        if (mFont)
+        {
+            TTF_CloseFont(mFont);
+            mFont = nullptr;
+        }
+
+        if (mRenderer)
+        {
+            SDL_DestroyRenderer(mRenderer);
+            mRenderer = nullptr;
+        }
+
+        if (mWindow)
+        {
+            SDL_DestroyWindow(mWindow);
+            mWindow = nullptr;
+        }
+
+        TTF_Quit();
+        IMG_Quit();
+        SDL_Quit();
     }
 
     void SDLRenderer::clear()
     {
+        SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 255);
         SDL_RenderClear(mRenderer);
     }
 
@@ -81,33 +130,17 @@ namespace zuul
         SDL_RenderPresent(mRenderer);
     }
 
-    void SDLRenderer::cleanup()
-    {
-        if (mRenderer)
-        {
-            SDL_DestroyRenderer(mRenderer);
-            mRenderer = nullptr;
-        }
-        if (mWindow)
-        {
-            SDL_DestroyWindow(mWindow);
-            mWindow = nullptr;
-        }
-        IMG_Quit();
-        SDL_Quit();
-    }
-
     std::shared_ptr<Texture> SDLRenderer::loadTexture(const std::string &path)
     {
-        SDL_Surface *loadedSurface = IMG_Load(path.c_str());
-        if (!loadedSurface)
+        SDL_Surface *surface = IMG_Load(path.c_str());
+        if (!surface)
         {
             std::cerr << "Unable to load image " << path << "! SDL_image Error: " << IMG_GetError() << std::endl;
             return nullptr;
         }
 
-        SDL_Texture *texture = SDL_CreateTextureFromSurface(mRenderer, loadedSurface);
-        SDL_FreeSurface(loadedSurface);
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(mRenderer, surface);
+        SDL_FreeSurface(surface);
 
         if (!texture)
         {
@@ -118,7 +151,7 @@ namespace zuul
         return std::make_shared<SDLTexture>(texture);
     }
 
-    void SDLRenderer::renderTexture(const std::shared_ptr<Texture> &texture, int srcX, int srcY, int srcW, int srcH,
+    void SDLRenderer::renderTexture(std::shared_ptr<Texture> texture, int srcX, int srcY, int srcW, int srcH,
                                     int destX, int destY, int destW, int destH)
     {
         auto sdlTexture = std::dynamic_pointer_cast<SDLTexture>(texture);
@@ -129,14 +162,45 @@ namespace zuul
 
         SDL_Rect srcRect = {srcX, srcY, srcW, srcH};
         SDL_Rect destRect = {destX, destY, destW, destH};
+
         SDL_RenderCopy(mRenderer, sdlTexture->getSDLTexture(), &srcRect, &destRect);
     }
 
     void SDLRenderer::renderRect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
     {
-        SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(mRenderer, r, g, b, a);
         SDL_Rect rect = {x, y, w, h};
         SDL_RenderDrawRect(mRenderer, &rect);
     }
+
+    void SDLRenderer::renderText(const std::string &text, int x, int y, const Color &color)
+    {
+        if (!mFont)
+        {
+            return;
+        }
+
+        SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
+        SDL_Surface *surface = TTF_RenderText_Blended(mFont, text.c_str(), sdlColor);
+        if (!surface)
+        {
+            std::cerr << "Unable to render text surface! SDL_ttf Error: " << TTF_GetError() << std::endl;
+            return;
+        }
+
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(mRenderer, surface);
+        if (!texture)
+        {
+            std::cerr << "Unable to create texture from rendered text! SDL Error: " << SDL_GetError() << std::endl;
+            SDL_FreeSurface(surface);
+            return;
+        }
+
+        SDL_Rect destRect = {x, y, surface->w, surface->h};
+        SDL_RenderCopy(mRenderer, texture, nullptr, &destRect);
+
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(texture);
+    }
+
 }
