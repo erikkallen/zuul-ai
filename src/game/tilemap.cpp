@@ -12,71 +12,105 @@ namespace zuul
 {
     TileMap::TileMap()
         : mWidth(0), mHeight(0), mTileWidth(0), mTileHeight(0),
-          mWindowWidth(800), mWindowHeight(600) // Default window dimensions
+          mWindowWidth(800), mWindowHeight(600), // Default window dimensions
+          mDebugRendering(false)
     {
-        mTilesetData = std::make_unique<TilesetData>();
     }
 
-    bool TileMap::loadFromFile(const std::string &mapFile, const std::string &tilesetFile, std::shared_ptr<Renderer> renderer)
+    bool TileMap::loadFromFile(const std::string &filepath, std::shared_ptr<Renderer> renderer)
     {
         try
         {
-            // Load tileset data (TSJ) first to get the image path
-            if (!mTilesetData->loadFromFile(tilesetFile))
-            {
-                std::cerr << "Failed to load tileset data: " << tilesetFile << std::endl;
-                return false;
-            }
-
-            // Load tileset JSON to get image path and columns
-            std::ifstream tilesetJson(tilesetFile);
-            if (!tilesetJson.is_open())
-            {
-                std::cerr << "Failed to open tileset file: " << tilesetFile << std::endl;
-                return false;
-            }
-
-            json tsj;
-            tilesetJson >> tsj;
-            std::string imagePath = "assets/" + std::string(tsj["image"]);
-            mTilesetColumns = tsj["columns"].get<int>();
-
-            // Load tileset texture using image path from TSJ
-            mTileset = renderer->loadTexture(imagePath);
-            if (!mTileset)
-            {
-                std::cerr << "Failed to load tileset texture: " << imagePath << std::endl;
-                return false;
-            }
-
-            // Load map data
-            std::ifstream file(mapFile);
+            std::ifstream file(filepath);
             if (!file.is_open())
             {
-                std::cerr << "Failed to open map file: " << mapFile << std::endl;
+                std::cerr << "Failed to open map file: " << filepath << std::endl;
                 return false;
             }
 
-            json mapJson;
-            file >> mapJson;
+            json mapData;
+            file >> mapData;
 
-            // Read map dimensions
-            mWidth = mapJson["width"];
-            mHeight = mapJson["height"];
-            mTileWidth = mapJson["tilewidth"];
-            mTileHeight = mapJson["tileheight"];
+            mWidth = mapData["width"].get<int>();
+            mHeight = mapData["height"].get<int>();
+            mTileWidth = mapData["tileheight"].get<int>();
+            mTileHeight = mapData["tilewidth"].get<int>();
+
+            // Load tilesets
+            int firstGid = 1;
+            std::string tilesetPath;
+            for (const auto &tileset : mapData["tilesets"])
+            {
+                if (tileset.contains("source"))
+                {
+                    std::string source = tileset["source"].get<std::string>();
+                    if (source.find("map_tiles.tsj") != std::string::npos)
+                    {
+                        firstGid = tileset["firstgid"].get<int>();
+                        tilesetPath = "assets/map_tiles.tsj";
+                        break;
+                    }
+                }
+            }
+
+            // Create and load tileset data
+            mTilesetData = std::make_shared<TilesetData>();
+            if (!mTilesetData->loadFromFile(tilesetPath))
+            {
+                std::cerr << "Failed to load tileset data" << std::endl;
+                return false;
+            }
+
+            // Load tileset texture
+            mTileset = renderer->loadTexture("assets/map_tiles.png");
+            if (!mTileset)
+            {
+                std::cerr << "Failed to load tileset texture" << std::endl;
+                return false;
+            }
+
+            // Clear existing layers and items
+            mLayers.clear();
+            mItems.clear();
 
             // Load layers
-            const auto &layers = mapJson["layers"];
-            for (const auto &layerJson : layers)
+            for (const auto &layer : mapData["layers"])
             {
-                if (layerJson["type"] == "tilelayer")
+                std::string type = layer["type"].get<std::string>();
+
+                if (type == "tilelayer")
                 {
-                    MapLayer layer;
-                    layer.name = layerJson["name"];
-                    layer.visible = layerJson.value("visible", true);
-                    layer.tileData = layerJson["data"].get<std::vector<int>>();
-                    mLayers.push_back(layer);
+                    MapLayer newLayer;
+                    newLayer.name = layer["name"].get<std::string>();
+                    newLayer.visible = layer["visible"].get<bool>();
+
+                    // Load tile data
+                    const auto &data = layer["data"];
+                    newLayer.tileData.reserve(data.size());
+                    for (const auto &gid : data)
+                    {
+                        newLayer.tileData.push_back(gid.get<unsigned int>());
+                    }
+
+                    mLayers.push_back(newLayer);
+                }
+                else if (type == "objectgroup")
+                {
+                    // Load items
+                    for (const auto &obj : layer["objects"])
+                    {
+                        if (obj.contains("type") && obj["type"].get<std::string>() == "Item")
+                        {
+                            int gid = obj["gid"].get<int>();
+                            float x = obj["x"].get<float>();
+                            float y = obj["y"].get<float>() - mTileHeight; // Adjust Y position for Tiled's coordinate system
+
+                            // Convert GID to local tile ID by subtracting firstGid
+                            int localTileId = gid - firstGid;
+
+                            mItems.emplace_back(localTileId, x, y, mTilesetData, mTileset);
+                        }
+                    }
                 }
             }
 
@@ -91,7 +125,14 @@ namespace zuul
 
     void TileMap::update(float deltaTime)
     {
+        // Update animations in tileset
         mTilesetData->update(deltaTime);
+
+        // Update items
+        for (auto &item : mItems)
+        {
+            item.update(deltaTime);
+        }
     }
 
     void TileMap::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom)
@@ -102,33 +143,50 @@ namespace zuul
         int endTileX = static_cast<int>((offsetX + mWindowWidth / zoom) / mTileWidth) + 2;   // Add extra column
         int endTileY = static_cast<int>((offsetY + mWindowHeight / zoom) / mTileHeight) + 2; // Add extra row
 
-        // Clamp tile range to map bounds
+        // Clamp to map bounds
         startTileX = std::max(0, startTileX);
         startTileY = std::max(0, startTileY);
         endTileX = std::min(mWidth, endTileX);
         endTileY = std::min(mHeight, endTileY);
+
+        // Constants for Tiled's tile flags
+        const unsigned FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
+        const unsigned FLIPPED_VERTICALLY_FLAG = 0x40000000;
+        const unsigned FLIPPED_DIAGONALLY_FLAG = 0x20000000;
+        const unsigned ALL_FLAGS = FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG;
 
         // Render each visible layer
         for (const auto &layer : mLayers)
         {
             if (layer.visible)
             {
-                // Only render tiles within the visible range
                 for (int y = startTileY; y < endTileY; ++y)
                 {
                     for (int x = startTileX; x < endTileX; ++x)
                     {
-                        int tileId = layer.tileData[y * mWidth + x];
-                        if (tileId > 0)
+                        unsigned int gid = layer.tileData[y * mWidth + x];
+                        if (gid > 0)
                         {
-                            int currentTileId = mTilesetData->getCurrentTileId(tileId - 1);
-                            int srcX = (currentTileId % mTilesetColumns) * mTileWidth;
-                            int srcY = (currentTileId / mTilesetColumns) * mTileHeight;
+                            // Extract the actual tile ID (remove flip flags)
+                            int tileId = (gid & ~ALL_FLAGS) - 1; // Convert to 0-based
 
+                            // Get current animation frame if tile is animated
+                            if (mTilesetData->hasAnimation(tileId))
+                            {
+                                tileId = mTilesetData->getCurrentTileId(tileId);
+                            }
+
+                            // Calculate source rectangle in tileset
+                            const auto &tilesetInfo = mTilesetData->getTilesetInfo();
+                            int srcX = (tileId % tilesetInfo.columns) * mTileWidth;
+                            int srcY = (tileId / tilesetInfo.columns) * mTileHeight;
+
+                            // Calculate destination rectangle with zoom
+                            // Use floor for position and ceil for dimensions to prevent gaps
                             float destX = std::floor((x * mTileWidth - offsetX) * zoom);
                             float destY = std::floor((y * mTileHeight - offsetY) * zoom);
-                            int destW = static_cast<int>(std::ceil(mTileWidth * zoom));
-                            int destH = static_cast<int>(std::ceil(mTileHeight * zoom));
+                            int destW = static_cast<int>(std::ceil((x + 1) * mTileWidth * zoom) - std::floor(x * mTileWidth * zoom));
+                            int destH = static_cast<int>(std::ceil((y + 1) * mTileHeight * zoom) - std::floor(y * mTileHeight * zoom));
 
                             renderer->renderTexture(mTileset,
                                                     srcX, srcY, mTileWidth, mTileHeight,
@@ -138,6 +196,29 @@ namespace zuul
                         }
                     }
                 }
+            }
+        }
+
+        // Render items
+        renderItems(renderer, offsetX, offsetY, zoom);
+    }
+
+    void TileMap::renderItems(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom)
+    {
+        for (auto &item : mItems)
+        {
+            item.render(renderer, offsetX, offsetY, zoom);
+        }
+    }
+
+    void TileMap::checkItemCollisions(float x, float y, float width, float height) const
+    {
+        for (auto &item : mItems)
+        {
+            if (!item.isCollected() && item.isColliding(x, y, width, height))
+            {
+                item.collect();
+                // TODO: Add scoring or other item collection effects
             }
         }
     }

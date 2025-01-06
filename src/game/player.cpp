@@ -129,6 +129,13 @@ namespace zuul
             mY = newY;
         }
 
+        // Check for item collisions
+        tileMap.checkItemCollisions(
+            mX + mCollisionBoxOffsetX,
+            mY + mCollisionBoxOffsetY,
+            mCollisionBoxWidth,
+            mCollisionBoxHeight);
+
         // Only update animations if moving
         if (mIsMoving)
         {

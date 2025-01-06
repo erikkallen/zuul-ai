@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <game/item.hpp>
 
 namespace zuul
 {
@@ -13,7 +14,7 @@ namespace zuul
     struct MapLayer
     {
         std::string name;
-        std::vector<int> tileData;
+        std::vector<unsigned int> tileData;
         bool visible;
     };
 
@@ -23,10 +24,10 @@ namespace zuul
         TileMap();
         ~TileMap() = default;
 
-        bool loadFromFile(const std::string &mapFile, const std::string &tilesetFile, std::shared_ptr<Renderer> renderer);
+        bool loadFromFile(const std::string &filepath, std::shared_ptr<Renderer> renderer);
         void update(float deltaTime);
-        void render(std::shared_ptr<Renderer> renderer, float offsetX = 0, float offsetY = 0, float zoom = 1.0f);
-        void renderDebugCollisions(std::shared_ptr<Renderer> renderer, float offsetX = 0, float offsetY = 0, float zoom = 1.0f);
+        void render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom);
+        void renderDebugCollisions(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom);
 
         // Collision detection
         bool checkCollision(float x, float y, float width, float height) const;
@@ -41,11 +42,15 @@ namespace zuul
         int getTileWidth() const { return mTileWidth; }
         int getTileHeight() const { return mTileHeight; }
 
+        // Item handling
+        void checkItemCollisions(float x, float y, float width, float height) const;
+        void renderItems(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom);
+
     private:
         std::pair<int, int> worldToTile(float x, float y) const;
 
         std::shared_ptr<Texture> mTileset;
-        std::unique_ptr<TilesetData> mTilesetData;
+        std::shared_ptr<TilesetData> mTilesetData;
         std::vector<MapLayer> mLayers;
 
         int mWidth;
@@ -56,6 +61,8 @@ namespace zuul
         int mWindowWidth;
         int mWindowHeight;
         bool mDebugRendering;
+
+        mutable std::vector<Item> mItems;
     };
 
 } // namespace zuul

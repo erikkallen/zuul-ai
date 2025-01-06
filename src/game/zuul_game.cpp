@@ -5,33 +5,30 @@
 namespace zuul
 {
 
-    bool ZuulGame::initialize(int windowWidth, int windowHeight, const ::std::string &windowTitle)
+    bool ZuulGame::initialize(int windowWidth, int windowHeight, const std::string &title)
     {
-        mWindowWidth = windowWidth;
-        mWindowHeight = windowHeight;
-
-        if (!Game::initialize(windowWidth, windowHeight, windowTitle))
+        if (!Game::initialize(windowWidth, windowHeight, title))
         {
             return false;
         }
 
-        mTileMap = ::std::make_unique<TileMap>();
-        if (!mTileMap->loadFromFile("assets/home.tmj", "assets/map_tiles.tsj", getRenderer()))
+        mTileMap = std::make_unique<TileMap>();
+        if (!mTileMap->loadFromFile("assets/home.tmj", getRenderer()))
         {
             return false;
         }
 
-        mPlayer = ::std::make_unique<Player>();
+        mPlayer = std::make_unique<Player>();
         if (!mPlayer->initialize(getRenderer()))
         {
             return false;
         }
 
-        // Set initial player position to center of screen
+        // Set initial player position
         mPlayer->setPosition(100, 100);
 
         // Initialize camera
-        mCamera = ::std::make_unique<Camera>(
+        mCamera = std::make_unique<Camera>(
             windowWidth,
             windowHeight,
             mTileMap->getWidth() * mTileMap->getTileWidth(),

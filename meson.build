@@ -26,6 +26,7 @@ sources = files(
     'src/game/zuul_game.cpp',
     'src/game/player.cpp',
     'src/game/camera.cpp',
+    'src/game/item.cpp',
 )
 
 executable(
