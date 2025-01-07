@@ -17,6 +17,16 @@ namespace zuul
     {
     }
 
+    void TileMap::setItemCollectCallback(std::function<void(int)> callback)
+    {
+        mItemCollectCallback = callback;
+        // Update existing items with the new callback
+        for (auto &item : mItems)
+        {
+            item.setCollectCallback(callback);
+        }
+    }
+
     bool TileMap::loadFromFile(const std::string &filepath, std::shared_ptr<Renderer> renderer)
     {
         try
@@ -109,6 +119,11 @@ namespace zuul
                             int localTileId = gid - firstGid;
 
                             mItems.emplace_back(localTileId, x, y, mTilesetData, mTileset);
+                            // Set the collect callback for the newly created item
+                            if (mItemCollectCallback)
+                            {
+                                mItems.back().setCollectCallback(mItemCollectCallback);
+                            }
                         }
                     }
                 }

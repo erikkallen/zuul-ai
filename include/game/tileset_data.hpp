@@ -58,6 +58,9 @@ namespace zuul
         const TilesetInfo &getTilesetInfo() const { return mTilesetInfo; }
         std::shared_ptr<Texture> getTexture() const { return mTexture; }
 
+        // Render methods
+        void renderTile(std::shared_ptr<Renderer> renderer, int tileId, float x, float y, float zoom = 1.0f) const;
+
     private:
         ::std::map<int, TileAnimation> mAnimations;
         ::std::map<int, CollisionBox> mCollisionBoxes;

@@ -41,6 +41,12 @@ namespace zuul
             return false;
         }
 
+        // Set up item collect callback
+        mTileMap->setItemCollectCallback([this](int itemId)
+                                         {
+            std::cout << "Item collected: " << itemId << std::endl;
+            mUI->addCollectedItem(itemId); });
+
         return true;
     }
 

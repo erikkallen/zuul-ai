@@ -44,22 +44,16 @@ namespace zuul
         {
             // Calculate position based on the UI layout
             int x = currentX;
-            int y = -uiY; // mWindowHeight - (mHeight * mTileHeight) + 16; // Align with the UI position
+            int y = uiY + mTileHeight; // Align with the UI position
 
-            // Render item icon
-            const auto &tilesetInfo = mTilesetData->getTilesetInfo();
-            int srcX = (itemId % tilesetInfo.columns) * tilesetInfo.tileWidth;
-            int srcY = (itemId / tilesetInfo.columns) * tilesetInfo.tileHeight;
-
-            renderer->renderTexture(mTileset,
-                                    srcX, srcY, tilesetInfo.tileWidth, tilesetInfo.tileHeight,
-                                    x, y,
-                                    tilesetInfo.tileWidth, tilesetInfo.tileHeight);
+            // Render item icon using the new renderTile method
+            mTilesetData->renderTile(renderer, itemId, x, y);
+            std::cout << "Rendering item icon: " << itemId << " at position (" << x << ", " << y << ")" << std::endl;
 
             // Render count above the item
             std::stringstream ss;
             ss << "x" << count;
-            renderer->renderText(ss.str(), x + tilesetInfo.tileWidth / 2, y - textOffsetY,
+            renderer->renderText(ss.str(), x + mTileWidth / 2, y - textOffsetY,
                                  {255, 255, 255, 255}); // White text
 
             // Move to next position
@@ -69,7 +63,9 @@ namespace zuul
 
     void UI::addCollectedItem(int itemId)
     {
+        std::cout << "Adding item to collection: " << itemId << std::endl;
         mCollectedItems[itemId]++;
+        std::cout << "Current count for item " << itemId << ": " << mCollectedItems[itemId] << std::endl;
     }
 
     int UI::getCollectedItemCount(int itemId) const

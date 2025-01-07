@@ -2,6 +2,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
+#include <cmath>
 
 using json = nlohmann::json;
 
@@ -151,6 +152,27 @@ namespace zuul
     {
         auto it = mSolidTiles.find(tileId);
         return it != mSolidTiles.end() ? it->second : false;
+    }
+
+    void TilesetData::renderTile(std::shared_ptr<Renderer> renderer, int tileId, float x, float y, float zoom) const
+    {
+        // Calculate source rectangle in tileset
+        int srcX = (tileId % mTilesetInfo.columns) * mTilesetInfo.tileWidth;
+        int srcY = (tileId / mTilesetInfo.columns) * mTilesetInfo.tileHeight;
+
+        // Calculate destination rectangle with zoom
+        // Use floor for position and ceil for dimensions to prevent gaps
+        float destX = std::floor(x * zoom);
+        float destY = std::floor(y * zoom);
+        int destW = static_cast<int>(std::ceil(mTilesetInfo.tileWidth * zoom));
+        int destH = static_cast<int>(std::ceil(mTilesetInfo.tileHeight * zoom));
+
+        // Render the tile
+        renderer->renderTexture(mTexture,
+                                srcX, srcY, mTilesetInfo.tileWidth, mTilesetInfo.tileHeight,
+                                static_cast<int>(destX),
+                                static_cast<int>(destY),
+                                destW, destH);
     }
 
 } // namespace zuul
