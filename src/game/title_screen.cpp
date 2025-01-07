@@ -8,7 +8,10 @@ namespace zuul
 {
     TitleScreen::TitleScreen()
         : mAnimationTimer(0.0f),
-          mFrameDuration(0.1f), // 10 frames per second
+          mFrameDuration(0.2f), // 5 frames per second
+          mBlinkTimer(0.0f),
+          mBlinkDuration(0.5f), // Blink every half second
+          mShowText(true),
           mCurrentFrame(0),
           mIsDone(false),
           mWindowWidth(0),
@@ -20,6 +23,14 @@ namespace zuul
     {
         // Get window size
         SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &mWindowWidth, &mWindowHeight);
+
+        // Load background
+        mBackground = renderer->loadTexture("assets/title_screen_background.png");
+        if (!mBackground)
+        {
+            std::cerr << "Failed to load title background: assets/title_screen_background.png" << std::endl;
+            return false;
+        }
 
         // Load all title screen frames
         std::string basePath = "assets/title_screen_";
@@ -76,10 +87,46 @@ namespace zuul
             mAnimationTimer -= mFrameDuration;
             mCurrentFrame = (mCurrentFrame + 1) % mFrames.size();
         }
+
+        // Update text blinking
+        mBlinkTimer += deltaTime;
+        if (mBlinkTimer >= mBlinkDuration)
+        {
+            mBlinkTimer -= mBlinkDuration;
+            mShowText = !mShowText;
+        }
     }
 
     void TitleScreen::render(std::shared_ptr<Renderer> renderer)
     {
+        // Set background color (hex 69bd2f = RGB 105, 189, 47)
+        renderer->clear();
+
+        // Render tiled background
+        if (mBackground)
+        {
+            int bgWidth = mBackground->getWidth();
+            int bgHeight = mBackground->getHeight();
+
+            // Calculate how many tiles we need in each direction
+            int tilesX = (mWindowWidth + bgWidth - 1) / bgWidth;
+            int tilesY = (mWindowHeight + bgHeight - 1) / bgHeight;
+
+            // Render the background tiles
+            for (int y = 0; y <= tilesY; y++)
+            {
+                for (int x = 0; x <= tilesX; x++)
+                {
+                    int destX = x * bgWidth;
+                    int destY = y * bgHeight;
+
+                    renderer->renderTexture(mBackground,
+                                            0, 0, bgWidth, bgHeight,
+                                            destX, destY, bgWidth, bgHeight);
+                }
+            }
+        }
+
         if (mCurrentFrame < mFrames.size())
         {
             auto texture = mFrames[mCurrentFrame];
@@ -100,6 +147,12 @@ namespace zuul
             renderer->renderTexture(texture,
                                     0, 0, texture->getWidth(), texture->getHeight(),
                                     destX, destY, destWidth, destHeight);
+        }
+
+        // Render blinking text in color #211f34
+        if (mShowText)
+        {
+            renderer->renderText("Press any key to start", mWindowWidth / 2 - 100, mWindowHeight - 100, {33, 31, 52, 255});
         }
     }
 }

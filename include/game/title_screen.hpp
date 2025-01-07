@@ -19,9 +19,13 @@ namespace zuul
         bool isDone() const { return mIsDone; }
 
     private:
+        std::shared_ptr<Texture> mBackground;
         std::vector<std::shared_ptr<Texture>> mFrames;
         float mAnimationTimer;
         float mFrameDuration;
+        float mBlinkTimer;
+        float mBlinkDuration;
+        bool mShowText;
         size_t mCurrentFrame;
         bool mIsDone;
         int mWindowWidth;
