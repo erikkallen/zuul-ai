@@ -18,17 +18,18 @@ json_dep = json.get_variable('nlohmann_json_dep')
 deps = [sdl2_dep, sdl2_image_dep, sdl2_ttf_dep, m_dep, spdlog_dep, json_dep]
 
 sources = files(
-    'src/main.cpp',
     'src/engine/game.cpp',
-    'src/engine/sdl_renderer.cpp',
     'src/engine/renderer.cpp',
-    'src/game/tilemap.cpp',
-    'src/game/tileset_data.cpp',
-    'src/game/zuul_game.cpp',
-    'src/game/player.cpp',
+    'src/engine/sdl_renderer.cpp',
     'src/game/camera.cpp',
     'src/game/item.cpp',
+    'src/game/player.cpp',
+    'src/game/tilemap.cpp',
+    'src/game/tileset_data.cpp',
+    'src/game/title_screen.cpp',
     'src/game/ui.cpp',
+    'src/game/zuul_game.cpp',
+    'src/main.cpp',
 )
 
 executable(

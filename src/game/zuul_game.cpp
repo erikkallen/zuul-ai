@@ -12,6 +12,17 @@ namespace zuul
             return false;
         }
 
+        mWindowWidth = windowWidth;
+        mWindowHeight = windowHeight;
+
+        // Initialize title screen first
+        mTitleScreen = std::make_unique<TitleScreen>();
+        if (!mTitleScreen->initialize(getRenderer()))
+        {
+            return false;
+        }
+
+        // Initialize game components (they'll be used after the title screen)
         mTileMap = std::make_unique<TileMap>();
         if (!mTileMap->loadFromFile("assets/home.tmj", getRenderer()))
         {
@@ -52,56 +63,77 @@ namespace zuul
 
     void ZuulGame::update(float deltaTime)
     {
-        // Get keyboard state
-        const Uint8 *keyState = SDL_GetKeyboardState(nullptr);
-
-        // Toggle debug rendering with F1
-        static bool lastF1State = false;
-        bool currentF1State = keyState[SDL_SCANCODE_F1];
-        if (currentF1State && !lastF1State)
+        if (!mGameStarted)
         {
-            mDebugRendering = !mDebugRendering;
-            mTileMap->setDebugRendering(mDebugRendering);
-            mPlayer->setDebugRendering(mDebugRendering);
+            // Update title screen
+            mTitleScreen->update(deltaTime);
+            if (mTitleScreen->isDone())
+            {
+                mGameStarted = true;
+                return;
+            }
         }
-        lastF1State = currentF1State;
-
-        // Handle camera zoom with + and - keys
-        if (keyState[SDL_SCANCODE_EQUALS])
+        else
         {
-            mCamera->adjustZoom(deltaTime); // Zoom in
-        }
-        if (keyState[SDL_SCANCODE_MINUS])
-        {
-            mCamera->adjustZoom(-deltaTime); // Zoom out
-        }
+            // Get keyboard state
+            const Uint8 *keyState = SDL_GetKeyboardState(nullptr);
 
-        // Update game objects
-        mPlayer->update(deltaTime, *mTileMap);
-        mTileMap->update(deltaTime);
-        mCamera->update(mPlayer->getX(), mPlayer->getY());
+            // Toggle debug rendering with F1
+            static bool lastF1State = false;
+            bool currentF1State = keyState[SDL_SCANCODE_F1];
+            if (currentF1State && !lastF1State)
+            {
+                mDebugRendering = !mDebugRendering;
+                mTileMap->setDebugRendering(mDebugRendering);
+                mPlayer->setDebugRendering(mDebugRendering);
+            }
+            lastF1State = currentF1State;
+
+            // Handle camera zoom with + and - keys
+            if (keyState[SDL_SCANCODE_EQUALS])
+            {
+                mCamera->adjustZoom(deltaTime); // Zoom in
+            }
+            if (keyState[SDL_SCANCODE_MINUS])
+            {
+                mCamera->adjustZoom(-deltaTime); // Zoom out
+            }
+
+            // Update game objects
+            mPlayer->update(deltaTime, *mTileMap);
+            mTileMap->update(deltaTime);
+            mCamera->update(mPlayer->getX(), mPlayer->getY());
+        }
     }
 
     void ZuulGame::render()
     {
-        float zoom = mCamera->getZoom();
-        float offsetX = mCamera->getOffsetX();
-        float offsetY = mCamera->getOffsetY();
-
-        // Render map layers
-        mTileMap->render(getRenderer(), offsetX, offsetY, zoom);
-
-        // Render player
-        mPlayer->render(getRenderer(), offsetX, offsetY, zoom);
-
-        // Render debug info if enabled
-        if (mDebugRendering)
+        if (!mGameStarted)
         {
-            mTileMap->renderDebugCollisions(getRenderer(), offsetX, offsetY, zoom);
+            // Render title screen
+            mTitleScreen->render(getRenderer());
         }
+        else
+        {
+            float zoom = mCamera->getZoom();
+            float offsetX = mCamera->getOffsetX();
+            float offsetY = mCamera->getOffsetY();
 
-        // Render UI (always on top, no offset or zoom)
-        mUI->render(getRenderer(), 0, 0, 1.0f);
+            // Render map layers
+            mTileMap->render(getRenderer(), offsetX, offsetY, zoom);
+
+            // Render player
+            mPlayer->render(getRenderer(), offsetX, offsetY, zoom);
+
+            // Render debug info if enabled
+            if (mDebugRendering)
+            {
+                mTileMap->renderDebugCollisions(getRenderer(), offsetX, offsetY, zoom);
+            }
+
+            // Render UI (always on top, no offset)
+            mUI->render(getRenderer(), 0, 0);
+        }
     }
 
 } // namespace zuul

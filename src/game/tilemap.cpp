@@ -72,7 +72,7 @@ namespace zuul
             }
 
             // Load tileset texture
-            mTileset = renderer->loadTexture("assets/map_tiles.png");
+            mTileset = renderer->loadTexture("assets/" + mTilesetData->getTilesetInfo().imagePath);
             if (!mTileset)
             {
                 std::cerr << "Failed to load tileset texture" << std::endl;

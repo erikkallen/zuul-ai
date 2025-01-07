@@ -7,6 +7,7 @@
 #include <game/player.hpp>
 #include <game/camera.hpp>
 #include <game/ui.hpp>
+#include <game/title_screen.hpp>
 
 namespace zuul
 {
@@ -26,7 +27,9 @@ namespace zuul
         std::unique_ptr<Player> mPlayer;
         std::unique_ptr<Camera> mCamera;
         std::unique_ptr<UI> mUI;
+        std::unique_ptr<TitleScreen> mTitleScreen;
         bool mDebugRendering = false;
+        bool mGameStarted = false;
         int mWindowWidth;
         int mWindowHeight;
     };

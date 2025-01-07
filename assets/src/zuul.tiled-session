@@ -12,7 +12,7 @@
             "selectedLayer": 0,
             "viewCenter": {
                 "x": 959.9999999999999,
-                "y": 638.6666666666666
+                "y": 638.6666666666667
             }
         },
         "/home/erikkallen/Projects/erik/zuul/assets/house.tmj": {
@@ -54,6 +54,14 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "/home/erikkallen/Projects/erik/zuul_ai/assets/home.tmj": {
+            "scale": 1.30328125,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1088.0230188226833,
+                "y": 559.357391200096
+            }
+        },
         ":/automap-tiles.tsx": {
             "scaleInDock": 1
         },
@@ -67,6 +75,7 @@
         }
     },
     "frame.defaultDuration": 400,
+    "last.objectTemplatePath": "/home/erikkallen/Projects/erik/zuul_ai/assets/src",
     "last.worldFilePath": "/home/erikkallen/Projects/erik/zuul/assets",
     "loadedWorlds": [
         "/home/erikkallen/Projects/erik/zuul/assets/worldofzuul.world"

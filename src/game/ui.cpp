@@ -28,32 +28,76 @@ namespace zuul
 
     void UI::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom)
     {
+        // Calculate zoom to stretch UI to window width
+        float stretchZoom = static_cast<float>(mWindowWidth) / (mWidth * mTileWidth);
+
         // Calculate UI position at the bottom of the screen
-        float uiY = mWindowHeight - (mHeight * mTileHeight);
+        float uiHeight = mHeight * mTileHeight * stretchZoom;
+        float renderY = mWindowHeight - uiHeight;
+
+        std::cout << "Window Width: " << mWindowWidth
+                  << ", UI Width: " << (mWidth * mTileWidth)
+                  << ", Stretch Zoom: " << stretchZoom
+                  << ", UI Height: " << uiHeight
+                  << ", Render Y: " << renderY << std::endl;
 
         // Render the UI tilemap at the bottom
-        TileMap::render(renderer, 0, -uiY, 1.0f);
+        for (const auto &layer : mLayers)
+        {
+            if (layer.visible)
+            {
+                for (int y = 0; y < mHeight; ++y)
+                {
+                    for (int x = 0; x < mWidth; ++x)
+                    {
+                        unsigned int tileId = layer.tileData[y * mWidth + x];
+                        if (tileId > 0)
+                        {
+                            // Convert from Tiled's 1-based indices to 0-based
+                            tileId--;
+
+                            // Calculate source rectangle in tileset
+                            int srcX = (tileId % mTilesetData->getTilesetInfo().columns) * mTileWidth;
+                            int srcY = (tileId / mTilesetData->getTilesetInfo().columns) * mTileHeight;
+
+                            // Calculate destination position
+                            float destX = x * mTileWidth * stretchZoom;
+                            float destY = renderY + (y * mTileHeight * stretchZoom);
+
+                            // Render the tile
+                            renderer->renderTexture(mTileset,
+                                                    srcX, srcY, mTileWidth, mTileHeight,
+                                                    static_cast<int>(destX),
+                                                    static_cast<int>(destY),
+                                                    static_cast<int>(mTileWidth * stretchZoom),
+                                                    static_cast<int>(mTileHeight * stretchZoom));
+                        }
+                    }
+                }
+            }
+        }
 
         // Render collected items count
-        const int itemSpacing = 64; // Space between items
-        const int textOffsetY = 10; // Offset for text above the item icon
-        const int itemStartX = 50;  // Starting X position for items
+        const int itemSpacing = 64 * stretchZoom; // Space between items, scaled with zoom
+        const int textOffsetY = 16 * stretchZoom; // Offset for text above the item icon, scaled with zoom
+        const int itemStartX = 50 * stretchZoom;  // Starting X position for items, scaled with zoom
         int currentX = itemStartX;
 
         for (const auto &[itemId, count] : mCollectedItems)
         {
             // Calculate position based on the UI layout
-            int x = currentX;
-            int y = uiY + mTileHeight; // Align with the UI position
+            float x = currentX;
+            float y = renderY + (mTileHeight * stretchZoom * 0.5f); // Position items in the UI bar
 
             // Render item icon using the new renderTile method
-            mTilesetData->renderTile(renderer, itemId, x, y);
-            std::cout << "Rendering item icon: " << itemId << " at position (" << x << ", " << y << ")" << std::endl;
+            mTilesetData->renderTile(renderer, itemId, x, y - textOffsetY);
 
             // Render count above the item
             std::stringstream ss;
             ss << "x" << count;
-            renderer->renderText(ss.str(), x + mTileWidth / 2, y - textOffsetY,
+            renderer->renderText(ss.str(),
+                                 static_cast<int>(x + (mTileWidth * stretchZoom * 0.5f)),
+                                 static_cast<int>(y - textOffsetY),
                                  {255, 255, 255, 255}); // White text
 
             // Move to next position
