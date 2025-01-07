@@ -28,38 +28,29 @@ namespace zuul
 
     bool Player::initialize(std::shared_ptr<Renderer> renderer)
     {
+        mTilesetData = std::make_shared<TilesetData>();
+        if (!mTilesetData->loadFromFile("assets/player_tiles.tsj", renderer))
+        {
+            return false;
+        }
+
+        // Load player texture
         mTexture = renderer->loadTexture("assets/player_tiles.png");
         if (!mTexture)
         {
             return false;
         }
 
-        if (!mTilesetData->loadFromFile("assets/player_tiles.tsj"))
-        {
-            return false;
-        }
-
-        // Get tileset grid information
+        // Get tileset info
         const auto &tilesetInfo = mTilesetData->getTilesetInfo();
-        mTilesetColumns = tilesetInfo.columns;
         mWidth = tilesetInfo.tileWidth;
         mHeight = tilesetInfo.tileHeight;
+        mTilesetColumns = tilesetInfo.columns;
 
-        // Get collision box from tileset data
-        if (const CollisionBox *box = mTilesetData->getCollisionBox(0))
+        // Load collision data
+        if (!loadCollisionData())
         {
-            mCollisionBoxOffsetX = box->x;
-            mCollisionBoxOffsetY = box->y;
-            mCollisionBoxWidth = box->width;
-            mCollisionBoxHeight = box->height;
-        }
-        else
-        {
-            // Default collision box if none defined
-            mCollisionBoxOffsetX = 4;
-            mCollisionBoxOffsetY = 0;
-            mCollisionBoxWidth = 24;
-            mCollisionBoxHeight = 32;
+            return false;
         }
 
         return true;
@@ -204,6 +195,27 @@ namespace zuul
     int Player::getBaseFrame() const
     {
         return static_cast<int>(mDirection);
+    }
+
+    bool Player::loadCollisionData()
+    {
+        // Get collision box from tileset data
+        if (const CollisionBox *box = mTilesetData->getCollisionBox(0))
+        {
+            mCollisionBoxOffsetX = box->x;
+            mCollisionBoxOffsetY = box->y;
+            mCollisionBoxWidth = box->width;
+            mCollisionBoxHeight = box->height;
+        }
+        else
+        {
+            // Default collision box if none defined
+            mCollisionBoxOffsetX = 4;
+            mCollisionBoxOffsetY = 0;
+            mCollisionBoxWidth = 24;
+            mCollisionBoxHeight = 32;
+        }
+        return true;
     }
 
 } // namespace zuul

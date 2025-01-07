@@ -7,7 +7,6 @@
 #include <vector>
 #include <string>
 #include <game/item.hpp>
-#include <game/ui.hpp>
 
 namespace zuul
 {
@@ -23,11 +22,11 @@ namespace zuul
     {
     public:
         TileMap();
-        ~TileMap() = default;
+        virtual ~TileMap() = default;
 
         bool loadFromFile(const std::string &filepath, std::shared_ptr<Renderer> renderer);
         void update(float deltaTime);
-        void render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom);
+        virtual void render(std::shared_ptr<Renderer> renderer, float offsetX = 0.0f, float offsetY = 0.0f, float zoom = 1.0f);
         void renderDebugCollisions(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom);
 
         // Collision detection
@@ -47,10 +46,7 @@ namespace zuul
         void checkItemCollisions(float x, float y, float width, float height) const;
         void renderItems(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom);
 
-        // UI
-        void renderUI(std::shared_ptr<Renderer> renderer);
-
-    private:
+    protected:
         std::pair<int, int> worldToTile(float x, float y) const;
 
         std::shared_ptr<Texture> mTileset;
@@ -67,7 +63,6 @@ namespace zuul
         bool mDebugRendering;
 
         mutable std::vector<Item> mItems;
-        UI mUI;
     };
 
 } // namespace zuul

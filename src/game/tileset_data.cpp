@@ -8,7 +8,7 @@ using json = nlohmann::json;
 namespace zuul
 {
 
-    bool TilesetData::loadFromFile(const std::string &filepath)
+    bool TilesetData::loadFromFile(const std::string &filepath, std::shared_ptr<Renderer> renderer)
     {
         try
         {
@@ -27,6 +27,15 @@ namespace zuul
             mTilesetInfo.tileWidth = tilesetJson["tilewidth"].get<int>();
             mTilesetInfo.tileHeight = tilesetJson["tileheight"].get<int>();
             mTilesetInfo.imagePath = tilesetJson["image"].get<std::string>();
+
+            // Load the tileset texture
+            std::string fullImagePath = "assets/" + mTilesetInfo.imagePath;
+            mTexture = renderer->loadTexture(fullImagePath);
+            if (!mTexture)
+            {
+                std::cerr << "Failed to load tileset texture: " << fullImagePath << std::endl;
+                return false;
+            }
 
             // Process each tile's data
             const auto &tiles = tilesetJson["tiles"];

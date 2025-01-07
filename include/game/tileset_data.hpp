@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <engine/renderer.hpp>
 
 namespace zuul
 {
@@ -40,7 +41,7 @@ namespace zuul
     class TilesetData
     {
     public:
-        bool loadFromFile(const ::std::string &filepath);
+        bool loadFromFile(const ::std::string &filepath, std::shared_ptr<Renderer> renderer);
         void update(float deltaTime);
 
         // Animation methods
@@ -55,12 +56,14 @@ namespace zuul
 
         // Tileset info
         const TilesetInfo &getTilesetInfo() const { return mTilesetInfo; }
+        std::shared_ptr<Texture> getTexture() const { return mTexture; }
 
     private:
         ::std::map<int, TileAnimation> mAnimations;
         ::std::map<int, CollisionBox> mCollisionBoxes;
         ::std::map<int, bool> mSolidTiles;
         TilesetInfo mTilesetInfo;
+        std::shared_ptr<Texture> mTexture;
     };
 
 } // namespace zuul

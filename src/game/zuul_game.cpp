@@ -34,6 +34,13 @@ namespace zuul
             mTileMap->getWidth() * mTileMap->getTileWidth(),
             mTileMap->getHeight() * mTileMap->getTileHeight());
 
+        // Initialize UI
+        mUI = std::make_unique<UI>();
+        if (!mUI->initialize(getRenderer()))
+        {
+            return false;
+        }
+
         return true;
     }
 
@@ -87,8 +94,8 @@ namespace zuul
             mTileMap->renderDebugCollisions(getRenderer(), offsetX, offsetY, zoom);
         }
 
-        // Render UI (always on top)
-        mTileMap->renderUI(getRenderer());
+        // Render UI (always on top, no offset or zoom)
+        mUI->render(getRenderer(), 0, 0, 1.0f);
     }
 
 } // namespace zuul

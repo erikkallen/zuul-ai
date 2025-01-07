@@ -6,6 +6,7 @@
 #include <game/tilemap.hpp>
 #include <game/player.hpp>
 #include <game/camera.hpp>
+#include <game/ui.hpp>
 
 namespace zuul
 {
@@ -24,6 +25,7 @@ namespace zuul
         std::unique_ptr<TileMap> mTileMap;
         std::unique_ptr<Player> mPlayer;
         std::unique_ptr<Camera> mCamera;
+        std::unique_ptr<UI> mUI;
         bool mDebugRendering = false;
         int mWindowWidth;
         int mWindowHeight;

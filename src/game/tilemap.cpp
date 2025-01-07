@@ -55,7 +55,7 @@ namespace zuul
 
             // Create and load tileset data
             mTilesetData = std::make_shared<TilesetData>();
-            if (!mTilesetData->loadFromFile(tilesetPath))
+            if (!mTilesetData->loadFromFile(tilesetPath, renderer))
             {
                 std::cerr << "Failed to load tileset data" << std::endl;
                 return false;
@@ -66,13 +66,6 @@ namespace zuul
             if (!mTileset)
             {
                 std::cerr << "Failed to load tileset texture" << std::endl;
-                return false;
-            }
-
-            // Initialize UI
-            if (!mUI.initialize(renderer))
-            {
-                std::cerr << "Failed to initialize UI" << std::endl;
                 return false;
             }
 
@@ -116,9 +109,6 @@ namespace zuul
                             int localTileId = gid - firstGid;
 
                             mItems.emplace_back(localTileId, x, y, mTilesetData, mTileset);
-                            // Set callback for item collection
-                            mItems.back().setCollectCallback([this](int itemId)
-                                                             { mUI.addCollectedItem(itemId); });
                         }
                     }
                 }
@@ -228,7 +218,6 @@ namespace zuul
             if (!item.isCollected() && item.isColliding(x, y, width, height))
             {
                 item.collect();
-                // TODO: Add scoring or other item collection effects
             }
         }
     }
@@ -364,11 +353,6 @@ namespace zuul
     std::pair<int, int> TileMap::worldToTile(float x, float y) const
     {
         return {static_cast<int>(x / mTileWidth), static_cast<int>(y / mTileHeight)};
-    }
-
-    void TileMap::renderUI(std::shared_ptr<Renderer> renderer)
-    {
-        mUI.render(renderer);
     }
 
 } // namespace zuul

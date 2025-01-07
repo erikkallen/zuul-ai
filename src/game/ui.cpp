@@ -1,61 +1,69 @@
 #include <game/ui.hpp>
 #include <string>
 #include <sstream>
-
+#include <SDL2/SDL.h>
+#include <iostream>
 namespace zuul
 {
     UI::UI()
-        : mTileWidth(32),
-          mTileHeight(32)
+        : TileMap()
     {
     }
 
     bool UI::initialize(std::shared_ptr<Renderer> renderer)
     {
-        mItemTexture = renderer->loadTexture("assets/map_tiles.png");
-        if (!mItemTexture)
+        if (!loadFromFile("assets/ui.tmj", renderer))
         {
             return false;
         }
 
-        mTilesetData = std::make_shared<TilesetData>();
-        if (!mTilesetData->loadFromFile("assets/map_tiles.tsj"))
-        {
-            return false;
-        }
+        // Get window size
+        int windowWidth, windowHeight;
+        SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &windowWidth, &windowHeight);
+        mWindowWidth = windowWidth;
+        mWindowHeight = windowHeight;
 
         return true;
     }
 
-    void UI::render(std::shared_ptr<Renderer> renderer)
+    void UI::render(std::shared_ptr<Renderer> renderer, float offsetX, float offsetY, float zoom)
     {
-        // Render collected items in the top-left corner
-        int x = 10;
-        int y = 10;
-        const int spacing = 5;
-        const float scale = 1.0f;
+        // Calculate UI position at the bottom of the screen
+        float uiY = mWindowHeight - (mHeight * mTileHeight);
+
+        // Render the UI tilemap at the bottom
+        TileMap::render(renderer, 0, -uiY, 1.0f);
+
+        // Render collected items count
+        const int itemSpacing = 64; // Space between items
+        const int textOffsetY = 10; // Offset for text above the item icon
+        const int itemStartX = 50;  // Starting X position for items
+        int currentX = itemStartX;
 
         for (const auto &[itemId, count] : mCollectedItems)
         {
+            // Calculate position based on the UI layout
+            int x = currentX;
+            int y = -uiY; // mWindowHeight - (mHeight * mTileHeight) + 16; // Align with the UI position
+
             // Render item icon
             const auto &tilesetInfo = mTilesetData->getTilesetInfo();
-            int srcX = (itemId % tilesetInfo.columns) * mTileWidth;
-            int srcY = (itemId / tilesetInfo.columns) * mTileHeight;
+            int srcX = (itemId % tilesetInfo.columns) * tilesetInfo.tileWidth;
+            int srcY = (itemId / tilesetInfo.columns) * tilesetInfo.tileHeight;
 
-            renderer->renderTexture(mItemTexture,
-                                    srcX, srcY, mTileWidth, mTileHeight,
+            renderer->renderTexture(mTileset,
+                                    srcX, srcY, tilesetInfo.tileWidth, tilesetInfo.tileHeight,
                                     x, y,
-                                    static_cast<int>(mTileWidth * scale),
-                                    static_cast<int>(mTileHeight * scale));
+                                    tilesetInfo.tileWidth, tilesetInfo.tileHeight);
 
-            // Render count
+            // Render count above the item
             std::stringstream ss;
             ss << "x" << count;
-            renderer->renderText(ss.str(), x + mTileWidth * scale + spacing, y + mTileHeight / 2 - 8,
+            renderer->renderText(ss.str(), x + tilesetInfo.tileWidth / 2, y - textOffsetY,
                                  {255, 255, 255, 255}); // White text
 
             // Move to next position
-            x += static_cast<int>(mTileWidth * scale + 50); // Add space for the count text
+            currentX += itemSpacing;
         }
     }
 
