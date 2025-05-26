@@ -1,5 +1,6 @@
 #include "engine/game.hpp"
 #include "engine/sdl_renderer.hpp"
+#include "engine/shader.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_timer.h>
 #include <memory>
@@ -12,9 +13,29 @@ namespace zuul
 
     bool Game::initialize(int windowWidth, int windowHeight, const ::std::string &windowTitle)
     {
+        // Create and initialize renderer first
         mRenderer = ::std::make_shared<SDLRenderer>();
         if (!mRenderer->initialize(windowWidth, windowHeight, windowTitle))
         {
+            return false;
+        }
+
+        // Initialize shader manager
+        if (!ShaderManager::getInstance().initialize())
+        {
+            std::cerr << "Failed to initialize shader manager" << std::endl;
+            return false;
+        }
+
+        // Load shaders
+        auto invertShader = ShaderManager::getInstance().loadShader(
+            "invert",
+            "assets/shaders/invert.vert",
+            "assets/shaders/invert.frag"
+        );
+        if (!invertShader)
+        {
+            std::cerr << "Failed to load invert shader" << std::endl;
             return false;
         }
 

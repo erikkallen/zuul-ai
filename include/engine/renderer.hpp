@@ -21,6 +21,7 @@ namespace zuul
         virtual ~Renderer();
 
         virtual bool initialize(int windowWidth, int windowHeight, const std::string &windowTitle) = 0;
+        virtual void cleanup() = 0;
         virtual void clear() = 0;
         virtual void present() = 0;
 
