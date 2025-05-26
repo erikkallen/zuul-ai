@@ -270,11 +270,11 @@ namespace zuul
             return;
         }
 
-        // Calculate normalized texture coordinates (flip Y coordinates)
+        // Calculate normalized texture coordinates
         float texLeft = static_cast<float>(srcX) / texture->getWidth();
         float texRight = static_cast<float>(srcX + srcW) / texture->getWidth();
-        float texTop = 1.0f - static_cast<float>(srcY) / texture->getHeight();
-        float texBottom = 1.0f - static_cast<float>(srcY + srcH) / texture->getHeight();
+        float texTop = static_cast<float>(srcY) / texture->getHeight();
+        float texBottom = static_cast<float>(srcY + srcH) / texture->getHeight();
 
         // Calculate normalized device coordinates and clamp to [-1, 1]
         float ndcLeft = std::max(-1.0f, std::min(1.0f, (2.0f * destX / mWindowWidth) - 1.0f));
@@ -348,7 +348,8 @@ namespace zuul
                         vec4 texColor = texture(texture1, TexCoord);
                         if(texColor.a < 0.1)
                             discard;
-                        FragColor = texColor;
+                        // Invert colors
+                        FragColor = vec4(1.0 - texColor.rgb, texColor.a);
                     }
                 )";
                 
