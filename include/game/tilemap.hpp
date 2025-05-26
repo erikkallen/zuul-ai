@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <engine/renderer.hpp>
 #include <game/tileset_data.hpp>
 #include <memory>

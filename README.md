@@ -9,23 +9,21 @@ Now I am trying to recreate it as best I can in C++ using SDL just for fun using
 
 ### Dependencies
 
-- SDL2
-- SDL2 image
-- SDL2 ttf
+- SDL3
+- SDL3 image
+- SDL3 ttf
 - Meson
 - nlohmann-json
 - spdlog
 
-Ubuntu```apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev meson git```
-
 Arch
-```yay -S sdl2 sdl2_image sdl2_ttf meson``` 
+```yay -S sdl3 sdl3_image sdl3_ttf meson``` 
 
 ```bash
 git clone https://github.com/erikkallen/zuul-remastered.git
 cd zuul
-meson wrap add nlohmann-json
-meson wrap add spdlog
+meson wrap install nlohmann_json
+meson wrap install spdlog
 mkdir build
 cd build
 meson setup ..
@@ -36,7 +34,7 @@ ninja
 
 ```bash
 # Copy the assets.json to the directory you built the projects e.g. <project_root>/build
-cp assets/*.{tmj,png,ttf,tsj} build/
+cp -r assets build/
 # Make sure you are in the directory where you built the project
 ./zuul
 ```

@@ -1,5 +1,5 @@
 #include <game/zuul_game.hpp>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <iostream>
 
 namespace zuul
@@ -76,7 +76,7 @@ namespace zuul
         else
         {
             // Get keyboard state
-            const Uint8 *keyState = SDL_GetKeyboardState(nullptr);
+            const bool *keyState = SDL_GetKeyboardState(nullptr);
 
             // Toggle debug rendering with F1
             static bool lastF1State = false;

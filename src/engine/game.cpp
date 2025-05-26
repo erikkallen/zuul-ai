@@ -1,7 +1,7 @@
 #include "engine/game.hpp"
 #include "engine/sdl_renderer.hpp"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_timer.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_timer.h>
 #include <memory>
 #include <iostream>
 
@@ -37,7 +37,7 @@ namespace zuul
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
-                if (event.type == SDL_QUIT)
+                if (event.type == SDL_EVENT_QUIT)
                 {
                     mIsRunning = false;
                 }

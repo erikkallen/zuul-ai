@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <cmath>
 #include <memory>
 #include <engine/renderer.hpp>
@@ -58,7 +58,7 @@ namespace zuul
 
     void Player::update(float deltaTime, const TileMap &tileMap)
     {
-        const uint8_t *keyState = SDL_GetKeyboardState(nullptr);
+        const bool *keyState = SDL_GetKeyboardState(nullptr);
 
         float dx = 0;
         float dy = 0;

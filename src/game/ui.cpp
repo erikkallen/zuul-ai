@@ -1,7 +1,7 @@
 #include <game/ui.hpp>
 #include <string>
 #include <sstream>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <iostream>
 namespace zuul
 {

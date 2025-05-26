@@ -1,5 +1,5 @@
 #include <game/title_screen.hpp>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <iostream>
 #include <filesystem>
 #include <algorithm>
@@ -66,7 +66,7 @@ namespace zuul
     void TitleScreen::update(float deltaTime)
     {
         // Check for any key press
-        const Uint8 *keyState = SDL_GetKeyboardState(nullptr);
+        const bool *keyState = SDL_GetKeyboardState(nullptr);
         int numKeys;
         SDL_PumpEvents();
         keyState = SDL_GetKeyboardState(&numKeys);

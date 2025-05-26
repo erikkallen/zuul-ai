@@ -3,9 +3,9 @@ project('zuul', 'cpp', default_options: ['cpp_std=c++23'])
 base_dir = meson.current_source_dir()
 incdir = include_directories('include')
 
-sdl2_dep = dependency('sdl2')
-sdl2_image_dep = dependency('SDL2_image')
-sdl2_ttf_dep = dependency('SDL2_ttf')
+sdl3_dep = dependency('sdl3')
+sdl3_image_dep = dependency('SDL3_image')
+sdl3_ttf_dep = dependency('SDL3_ttf')
 cpp = meson.get_compiler('cpp')
 m_dep = cpp.find_library('m', required: true)
 valgrind = find_program('valgrind', required: false)
@@ -15,7 +15,7 @@ json = subproject('nlohmann_json')
 spdlog_dep = spdlog.get_variable('spdlog_dep')
 json_dep = json.get_variable('nlohmann_json_dep')
 
-deps = [sdl2_dep, sdl2_image_dep, sdl2_ttf_dep, m_dep, spdlog_dep, json_dep]
+deps = [sdl3_dep, sdl3_image_dep, sdl3_ttf_dep, m_dep, spdlog_dep, json_dep]
 
 sources = files(
     'src/engine/game.cpp',
