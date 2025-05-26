@@ -349,7 +349,7 @@ namespace zuul
                         if(texColor.a < 0.1)
                             discard;
                         // Invert colors
-                        FragColor = vec4(1.0 - texColor.rgb, texColor.a);
+                        FragColor = vec4(texColor.rgb, texColor.a);
                     }
                 )";
                 
@@ -438,7 +438,7 @@ namespace zuul
             return;
         }
 
-        SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
+        SDL_Color sdlColor = {static_cast<uint8_t>(color.r), static_cast<uint8_t>(color.g), static_cast<uint8_t>(color.b), static_cast<uint8_t>(color.a)};
         SDL_Surface *surface = TTF_RenderText_Blended(mFont, text.c_str(), 0, sdlColor);
         if (!surface)
         {
@@ -451,23 +451,32 @@ namespace zuul
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        // Set texture parameters
+        // Set texture parameters for text
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        // Convert surface to RGBA if needed
+        SDL_Surface* rgbaSurface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
+        if (!rgbaSurface) {
+            std::cerr << "Failed to convert surface to RGBA format" << std::endl;
+            SDL_DestroySurface(surface);
+            return;
+        }
 
         // Upload texture data
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgbaSurface->w, rgbaSurface->h, 0, 
+                    GL_RGBA, GL_UNSIGNED_BYTE, rgbaSurface->pixels);
 
         // Render the texture
         renderTexture(std::make_shared<SDLTexture>(texture),
-                     0, 0, surface->w, surface->h,
-                     x, y, surface->w, surface->h);
+                     0, 0, rgbaSurface->w, rgbaSurface->h,
+                     x, y, rgbaSurface->w, rgbaSurface->h);
 
         // Clean up
         glDeleteTextures(1, &texture);
+        SDL_DestroySurface(rgbaSurface);
         SDL_DestroySurface(surface);
     }
 
