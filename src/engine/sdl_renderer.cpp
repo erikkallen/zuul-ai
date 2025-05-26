@@ -215,6 +215,10 @@ namespace zuul
         if (mCurrentShader)
         {
             mCurrentShader->use();
+            // Set time uniform for shaders that need it (like water)
+            if (shaderName == "water") {
+                mCurrentShader->setUniform("time", SDL_GetTicks() / 1000.0f);
+            }
         }
     }
 
@@ -253,8 +257,6 @@ namespace zuul
         glTexImage2D(GL_TEXTURE_2D, 0, format, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        // Create a dummy SDL texture (we don't actually use it anymore)
-        SDL_Texture *sdlTexture = nullptr;
         SDL_DestroySurface(surface);
 
         return std::make_shared<SDLTexture>(texture);
@@ -281,10 +283,6 @@ namespace zuul
         float ndcRight = std::max(-1.0f, std::min(1.0f, (2.0f * (destX + destW) / mWindowWidth) - 1.0f));
         float ndcTop = std::max(-1.0f, std::min(1.0f, 1.0f - (2.0f * destY / mWindowHeight)));
         float ndcBottom = std::max(-1.0f, std::min(1.0f, 1.0f - (2.0f * (destY + destH) / mWindowHeight)));
-
-        std::cout << "Rendering texture at: " << destX << "," << destY << " size: " << destW << "x" << destH << std::endl;
-        std::cout << "NDC coordinates: " << ndcLeft << "," << ndcTop << " to " << ndcRight << "," << ndcBottom << std::endl;
-        std::cout << "Texture coordinates: " << texLeft << "," << texTop << " to " << texRight << "," << texBottom << std::endl;
 
         // Vertex data
         float vertices[] = {
@@ -322,7 +320,6 @@ namespace zuul
         }
         else
         {
-            std::cout << "No shader active, using default shader" << std::endl;
             // Use default shader if none is active
             static GLuint defaultShader = 0;
             if (defaultShader == 0) {
@@ -478,6 +475,26 @@ namespace zuul
         glDeleteTextures(1, &texture);
         SDL_DestroySurface(rgbaSurface);
         SDL_DestroySurface(surface);
+    }
+
+    void SDLRenderer::renderTextureWithShader(std::shared_ptr<Texture> texture, int srcX, int srcY, int srcW, int srcH,
+                                    int destX, int destY, int destW, int destH, const std::string& shaderName)
+    {
+        // Store current shader state
+        std::shared_ptr<Shader> previousShader = mCurrentShader;
+        
+        // Apply the specified shader
+        useShader(shaderName);
+        
+        // Render the texture
+        renderTexture(texture, srcX, srcY, srcW, srcH, destX, destY, destW, destH);
+        
+        // Restore previous shader state
+        if (previousShader) {
+            previousShader->use();
+        } else {
+            disableShader();
+        }
     }
 
 }

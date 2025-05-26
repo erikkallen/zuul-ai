@@ -85,6 +85,10 @@ namespace zuul
                         {
                             mSolidTiles[id] = prop["value"].get<bool>();
                         }
+                        if (prop["name"] == "shader" && prop["type"] == "string")
+                        {
+                            mUseShader[id] = prop["value"].get<std::string>();
+                        }
                     }
                 }
             }
@@ -119,6 +123,12 @@ namespace zuul
     bool TilesetData::hasAnimation(int tileId) const
     {
         return mAnimations.find(tileId) != mAnimations.end();
+    }
+
+    std::string TilesetData::useShader(int tileId) const
+    {
+        auto it = mUseShader.find(tileId);
+        return it != mUseShader.end() ? it->second : "";
     }
 
     int TilesetData::getCurrentTileId(int baseTileId) const

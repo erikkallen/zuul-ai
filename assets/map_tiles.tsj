@@ -6,7 +6,7 @@
  "name":"map_tiles",
  "spacing":0,
  "tilecount":512,
- "tiledversion":"1.11.0",
+ "tiledversion":"1.11.2",
  "tileheight":32,
  "tiles":[
         {
@@ -60,6 +60,11 @@
         {
          "id":7,
          "properties":[
+                {
+                 "name":"shader",
+                 "type":"string",
+                 "value":"water"
+                }, 
                 {
                  "name":"solid",
                  "type":"bool",
@@ -124,6 +129,11 @@
                 }],
          "id":37,
          "properties":[
+                {
+                 "name":"shader",
+                 "type":"string",
+                 "value":"water"
+                }, 
                 {
                  "name":"solid",
                  "type":"bool",

@@ -1,9 +1,15 @@
 {
-    "activeFile": "/home/erikkallen/Projects/erik/zuul/assets/home.tmj",
+    "activeFile": "/home/erikkallen/Projects/erik/zuul-ai/assets/map_tiles.tsj",
     "expandedProjectPaths": [
-        "/home/erikkallen/Projects/erik/zuul/assets"
+        "/home/erikkallen/Projects/erik/zuul/assets",
+        ".",
+        "/home/erikkallen/Projects/erik/zuul-ai/assets"
     ],
     "fileStates": {
+        "/home/erikkallen/Projects/erik/zuul-ai/assets/map_tiles.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "/home/erikkallen/Projects/erik/zuul/assets/home.tmj": {
             "expandedObjectLayers": [
                 6
@@ -81,14 +87,12 @@
         "/home/erikkallen/Projects/erik/zuul/assets/worldofzuul.world"
     ],
     "openFiles": [
-        "/home/erikkallen/Projects/erik/zuul/assets/home.tmj",
-        "/home/erikkallen/Projects/erik/zuul/assets/player_tiles.tsj",
-        "/home/erikkallen/Projects/erik/zuul/assets/house.tmj",
-        "/home/erikkallen/Projects/erik/zuul/assets/map_tiles.tsj"
+        "/home/erikkallen/Projects/erik/zuul-ai/assets/map_tiles.tsj"
     ],
     "project": "zuul.tiled-project",
-    "property.type": "int",
+    "property.type": "string",
     "recentFiles": [
+        "/home/erikkallen/Projects/erik/zuul-ai/assets/map_tiles.tsj",
         "/home/erikkallen/Projects/erik/zuul/assets/map_tiles.tsj",
         "/home/erikkallen/Projects/erik/zuul/assets/house.tmj",
         "/home/erikkallen/Projects/erik/zuul/assets/player_tiles.tsj",

@@ -60,11 +60,13 @@ namespace zuul
 
         // Render methods
         void renderTile(std::shared_ptr<Renderer> renderer, int tileId, float x, float y, float zoom = 1.0f) const;
+        std::string useShader(int tileId) const;
 
     private:
         ::std::map<int, TileAnimation> mAnimations;
         ::std::map<int, CollisionBox> mCollisionBoxes;
         ::std::map<int, bool> mSolidTiles;
+        ::std::map<int, ::std::string> mUseShader;
         TilesetInfo mTilesetInfo;
         std::shared_ptr<Texture> mTexture;
     };

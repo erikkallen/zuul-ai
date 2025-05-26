@@ -28,6 +28,7 @@ namespace zuul
         }
 
         // Load shaders
+        std::cout << "Loading invert shader..." << std::endl;
         auto invertShader = ShaderManager::getInstance().loadShader(
             "invert",
             "assets/shaders/invert.vert",
@@ -36,6 +37,18 @@ namespace zuul
         if (!invertShader)
         {
             std::cerr << "Failed to load invert shader" << std::endl;
+            return false;
+        }
+
+        std::cout << "Loading water shader..." << std::endl;
+        auto waterShader = ShaderManager::getInstance().loadShader(
+            "water",
+            "assets/shaders/water.vert",
+            "assets/shaders/water.frag"
+        );
+        if (!waterShader)
+        {
+            std::cerr << "Failed to load water shader" << std::endl;
             return false;
         }
 

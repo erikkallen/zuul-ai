@@ -14,6 +14,7 @@ Shader::~Shader() {
 }
 
 bool Shader::loadFromFile(const std::string& vertexPath, const std::string& fragmentPath) {
+    std::cout << "Loading vertex shader from: " << vertexPath << std::endl;
     // Read vertex shader
     std::string vertexCode;
     std::ifstream vShaderFile(vertexPath);
@@ -22,11 +23,13 @@ bool Shader::loadFromFile(const std::string& vertexPath, const std::string& frag
         vShaderStream << vShaderFile.rdbuf();
         vertexCode = vShaderStream.str();
         vShaderFile.close();
+        std::cout << "Successfully loaded vertex shader" << std::endl;
     } else {
         std::cerr << "Failed to open vertex shader file: " << vertexPath << std::endl;
         return false;
     }
 
+    std::cout << "Loading fragment shader from: " << fragmentPath << std::endl;
     // Read fragment shader
     std::string fragmentCode;
     std::ifstream fShaderFile(fragmentPath);
@@ -35,21 +38,28 @@ bool Shader::loadFromFile(const std::string& vertexPath, const std::string& frag
         fShaderStream << fShaderFile.rdbuf();
         fragmentCode = fShaderStream.str();
         fShaderFile.close();
+        std::cout << "Successfully loaded fragment shader" << std::endl;
     } else {
         std::cerr << "Failed to open fragment shader file: " << fragmentPath << std::endl;
         return false;
     }
 
+    std::cout << "Compiling vertex shader..." << std::endl;
     // Compile shaders
     GLuint vertexShader, fragmentShader;
     if (!compileShader(vertexShader, GL_VERTEX_SHADER, vertexCode)) {
         return false;
     }
+    std::cout << "Vertex shader compiled successfully" << std::endl;
+
+    std::cout << "Compiling fragment shader..." << std::endl;
     if (!compileShader(fragmentShader, GL_FRAGMENT_SHADER, fragmentCode)) {
         glDeleteShader(vertexShader);
         return false;
     }
+    std::cout << "Fragment shader compiled successfully" << std::endl;
 
+    std::cout << "Creating shader program..." << std::endl;
     // Create shader program
     mProgram = glCreateProgram();
     glAttachShader(mProgram, vertexShader);
@@ -60,6 +70,7 @@ bool Shader::loadFromFile(const std::string& vertexPath, const std::string& frag
         glDeleteShader(fragmentShader);
         return false;
     }
+    std::cout << "Shader program created and linked successfully" << std::endl;
 
     // Clean up
     glDeleteShader(vertexShader);

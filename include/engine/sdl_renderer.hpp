@@ -42,6 +42,8 @@ namespace zuul
         std::shared_ptr<Texture> loadTexture(const std::string &path) override;
         void renderTexture(std::shared_ptr<Texture> texture, int srcX, int srcY, int srcW, int srcH,
                           int destX, int destY, int destW, int destH) override;
+        void renderTextureWithShader(std::shared_ptr<Texture> texture, int srcX, int srcY, int srcW, int srcH,
+                                    int destX, int destY, int destW, int destH, const std::string& shaderName);
         void renderRect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a) override;
         void renderText(const std::string &text, int x, int y, const Color &color) override;
 

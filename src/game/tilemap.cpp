@@ -203,11 +203,14 @@ namespace zuul
                             int destW = static_cast<int>(std::ceil((x + 1) * mTileWidth * zoom) - std::floor(x * mTileWidth * zoom));
                             int destH = static_cast<int>(std::ceil((y + 1) * mTileHeight * zoom) - std::floor(y * mTileHeight * zoom));
 
-                            renderer->renderTexture(mTileset,
+                            std::string shaderName = mTilesetData->useShader(tileId);
+
+                            renderer->renderTextureWithShader(mTileset,
                                                     srcX, srcY, mTileWidth, mTileHeight,
                                                     static_cast<int>(destX),
                                                     static_cast<int>(destY),
-                                                    destW, destH);
+                                                    destW, destH,
+                                                    shaderName);
                         }
                     }
                 }
