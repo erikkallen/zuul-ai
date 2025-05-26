@@ -270,11 +270,11 @@ namespace zuul
             return;
         }
 
-        // Calculate normalized texture coordinates
+        // Calculate normalized texture coordinates (flip Y coordinates)
         float texLeft = static_cast<float>(srcX) / texture->getWidth();
         float texRight = static_cast<float>(srcX + srcW) / texture->getWidth();
-        float texTop = static_cast<float>(srcY) / texture->getHeight();
-        float texBottom = static_cast<float>(srcY + srcH) / texture->getHeight();
+        float texTop = 1.0f - static_cast<float>(srcY) / texture->getHeight();
+        float texBottom = 1.0f - static_cast<float>(srcY + srcH) / texture->getHeight();
 
         // Calculate normalized device coordinates and clamp to [-1, 1]
         float ndcLeft = std::max(-1.0f, std::min(1.0f, (2.0f * destX / mWindowWidth) - 1.0f));
@@ -450,11 +450,13 @@ namespace zuul
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
 
+        // Set texture parameters
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+        // Upload texture data
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
         glGenerateMipmap(GL_TEXTURE_2D);
 
