@@ -6,7 +6,7 @@ incdir = include_directories('include')
 sdl3_dep = dependency('sdl3')
 sdl3_image_dep = dependency('SDL3_image')
 sdl3_ttf_dep = dependency('SDL3_ttf')
-glew_dep = dependency('glew')
+gl_dep = dependency('gl')
 cpp = meson.get_compiler('cpp')
 m_dep = cpp.find_library('m', required: true)
 valgrind = find_program('valgrind', required: false)
@@ -16,10 +16,11 @@ json = subproject('nlohmann_json')
 spdlog_dep = spdlog.get_variable('spdlog_dep')
 json_dep = json.get_variable('nlohmann_json_dep')
 
-deps = [sdl3_dep, sdl3_image_dep, sdl3_ttf_dep, glew_dep, m_dep, spdlog_dep, json_dep]
+deps = [sdl3_dep, sdl3_image_dep, sdl3_ttf_dep, gl_dep, m_dep, spdlog_dep, json_dep]
 
 sources = files(
     'src/engine/game.cpp',
+    'src/engine/gl_functions.cpp',
     'src/engine/renderer.cpp',
     'src/engine/sdl_renderer.cpp',
     'src/engine/shader.cpp',

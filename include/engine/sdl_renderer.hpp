@@ -1,10 +1,10 @@
 #pragma once
 
 #include "engine/renderer.hpp"
+#include "engine/gl_functions.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_image/SDL_image.h>
-#include <GL/glew.h>
 #include <memory>
 #include <string>
 #include "engine/shader.hpp"

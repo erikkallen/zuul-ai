@@ -1,4 +1,5 @@
 #include "engine/sdl_renderer.hpp"
+#include "engine/gl_functions.hpp"
 #include <SDL3_image/SDL_image.h>
 #include <iostream>
 
@@ -110,6 +111,9 @@ namespace zuul
             return false;
         }
 
+        // Print current video driver
+        std::cout << "Using video driver: " << SDL_GetCurrentVideoDriver() << std::endl;
+
         // Set up OpenGL attributes
         setupOpenGL();
 
@@ -129,18 +133,25 @@ namespace zuul
             return false;
         }
 
-        // Initialize GLEW
-        glewExperimental = GL_TRUE;
-        GLenum err = glewInit();
-        if (err != GLEW_OK)
+        // Load OpenGL function pointers
+        if (!initOpenGLFunctions())
         {
-            std::cerr << "Failed to initialize GLEW: " << glewGetErrorString(err) << std::endl;
+            std::cerr << "Failed to load OpenGL functions" << std::endl;
             return false;
         }
 
         // Print OpenGL version
-        std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
-        std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+        const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        const char* glslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+        if (!version || !glslVersion)
+        {
+            std::cerr << "Failed to get OpenGL version info" << std::endl;
+            return false;
+        }
+
+        std::cout << "OpenGL Version: " << version << std::endl;
+        std::cout << "GLSL Version: " << glslVersion << std::endl;
 
         // Enable blending
         glEnable(GL_BLEND);

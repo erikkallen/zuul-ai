@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <GL/glew.h>
+#include "engine/gl_functions.hpp"
 #include <SDL3/SDL.h>
 #include <memory>
 #include <unordered_map>
